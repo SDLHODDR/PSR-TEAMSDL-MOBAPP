@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Sanjeevani Tablet",
+    "pack": "30 tablets",
+    "category": "Classical",
+    "mrp": "₹120.00"
+  },
+  {
+    "name": "Guduchi Capsule",
+    "pack": "60 capsules",
+    "category": "Classical",
+    "mrp": "₹150.00"
+  },
+  {
+    "name": "Ashwagandha Churna",
+    "pack": "100 g",
+    "category": "Classical",
+    "mrp": "₹110.00"
+  },
+  {
+    "name": "Triphala Tablet",
+    "pack": "60 tablets",
+    "category": "Classical",
+    "mrp": "₹95.00"
+  },
+  {
+    "name": "Brahmi Syrup",
+    "pack": "200 ml",
+    "category": "Proprietary",
+    "mrp": "₹130.00"
+  }
+]

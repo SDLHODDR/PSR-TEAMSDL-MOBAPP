@@ -1,0 +1,14 @@
+{
+  "route": "Route No: 1 - Indira Nagar",
+  "customers": [
+    {"name": "Vd. Sagar Patil", "type": "Core Vaidya / Doctor", "verified": false},
+    {"name": "Vd. Ashutosh Yardi", "type": "Vaidya / Doctor", "verified": false},
+    {"name": "Vd. Mrunmayee Baviskar", "type": "Vaidya / Doctor", "verified": false},
+    {"name": "Vd. Parnika Chevale", "type": "Vaidya / Doctor", "verified": false},
+    {"name": "Vd. Shaikh Abdullah", "type": "Vaidya / Doctor", "verified": false},
+    {"name": "Vd. Subodh Bahade", "type": "Vaidya / Doctor", "verified": false},
+    {"name": "Vd. Akshay Zite", "type": "Vaidya / Doctor", "verified": false},
+    {"name": "Aashish Medical", "type": "Retailer / Chemist", "verified": true, "verifiedOn": "27-Jan-26 01:01 PM"},
+    {"name": "Ashokanand Aushadhalaya", "type": "Retailer / Chemist", "verified": false}
+  ]
+}

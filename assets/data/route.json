@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Shree Medical & General Stores",
+    "location": "Andheri East",
+    "contact": "Dr. Rajesh Patil",
+    "time": "09:30 AM",
+    "status": "Planned"
+  },
+  {
+    "name": "Wellness Pharma",
+    "location": "Vile Parle East",
+    "contact": "Dr. Mehta",
+    "time": "11:00 AM",
+    "status": "Planned"
+  },
+  {
+    "name": "Om Sai Medical",
+    "location": "Santacruz East",
+    "contact": "Dr. Nair",
+    "time": "01:00 PM",
+    "status": "Upcoming"
+  },
+  {
+    "name": "Health Plus",
+    "location": "Bandra West",
+    "contact": "Dr. Sharma",
+    "time": "03:00 PM",
+    "status": "Upcoming"
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "months": [
+    {
+      "label": "Nov-2026",
+      "days": [
+        {"day": "01", "summary": "Sunday", "kind": "holiday", "details": []},
+        {"day": "02", "summary": "Ashoka Marg", "routeId": "2", "kind": "route", "pob": 840.0, "sob": 0.0, "details": [{"customer": "Aadhar Medical Store", "pob": 0.0}, {"customer": "Pushpaswaroop Medical", "pob": 840.0}]}
+      ]
+    },
+    {
+      "label": "Oct-2026",
+      "days": [
+        {"day": "01", "summary": "Indira Nagar", "routeId": "1", "kind": "route", "pob": 0.0, "sob": 0.0, "details": [{"customer": "Sanjeevani Medical Store", "pob": 0.0}]},
+        {"day": "02", "summary": "Gandhi Jayanti", "kind": "holiday", "details": []},
+        {"day": "03", "summary": "Igatpuri - Ghoti", "routeId": "8", "kind": "route", "pob": 0.0, "sob": 0.0, "details": [{"customer": "Aadhar Medical Store", "pob": 0.0}, {"customer": "Sanjeevani Medical Store", "pob": 0.0}]},
+        {"day": "04", "summary": "Sunday", "kind": "holiday", "details": []},
+        {"day": "05", "summary": "Ashoka Marg", "routeId": "2", "kind": "route", "pob": 840.0, "sob": 0.0, "details": [{"customer": "Pushpaswaroop Medical", "pob": 840.0}]},
+        {"day": "06", "summary": "Trimurti Chowk-Cidco", "routeId": "4", "kind": "route", "pob": 15279.0, "sob": 0.0, "details": [{"customer": "Aadhar Medical Store", "pob": 15279.0}]},
+        {"day": "07", "summary": "Lekha Nagar-Cidco", "routeId": "3", "kind": "route", "pob": 17618.0, "sob": 0.0, "details": [{"customer": "Sanjeevani Medical Store", "pob": 17618.0}]},
+        {"day": "08", "summary": "Sangamner 1", "routeId": "12", "kind": "route", "pob": 14818.0, "sob": 0.0, "details": [{"customer": "Shree Medical", "pob": 14818.0}]}
+      ]
+    }
+  ]
+}

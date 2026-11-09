@@ -1,0 +1,23 @@
+[
+  {
+    "orderNo": "SO10234",
+    "customer": "Shree Medical",
+    "date": "15 Oct 2026",
+    "amount": "₹8,250",
+    "status": "Submitted"
+  },
+  {
+    "orderNo": "SO10233",
+    "customer": "Wellness Pharma",
+    "date": "14 Oct 2026",
+    "amount": "₹6,480",
+    "status": "Approved"
+  },
+  {
+    "orderNo": "SO10232",
+    "customer": "Om Sai Medical",
+    "date": "13 Oct 2026",
+    "amount": "₹12,500",
+    "status": "Submitted"
+  }
+]

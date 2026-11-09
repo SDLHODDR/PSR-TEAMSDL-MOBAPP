@@ -1,0 +1,70 @@
+{
+  "employee": {
+    "name": "Sunil Ghate",
+    "role": "PSR",
+    "territory": "Mumbai West"
+  },
+  "summary": [
+    {
+      "title": "Planned visits",
+      "value": "12",
+      "icon": "route"
+    },
+    {
+      "title": "Visits completed",
+      "value": "5",
+      "icon": "check_circle"
+    },
+    {
+      "title": "Order value",
+      "value": "₹24,000",
+      "icon": "shopping_bag"
+    }
+  ],
+  "activities": [
+    {
+      "title": "Tour Plans",
+      "subtitle": "Plan your visits",
+      "description": "Plan and review daily and weekly tour programmes.",
+      "icon": "calendar_month"
+    },
+    {
+      "title": "Field Work",
+      "subtitle": "Record customer visits",
+      "description": "Record doctor, chemist and stockist visits.",
+      "icon": "location_on"
+    },
+    {
+      "title": "Non Field Work",
+      "subtitle": "Training & meetings",
+      "description": "Record office work, training, meetings and other non-field activities.",
+      "icon": "work"
+    },
+    {
+      "title": "Expense",
+      "subtitle": "Submit claims",
+      "description": "Create and review travel and other expense claims.",
+      "icon": "wallet"
+    },
+    {
+      "title": "Leave",
+      "subtitle": "Apply & track",
+      "description": "Apply for leave and check request status.",
+      "icon": "event"
+    }
+  ],
+  "reports": [
+    {
+      "title": "Monthly Report",
+      "subtitle": "Performance overview",
+      "description": "Review monthly visits, orders and performance.",
+      "icon": "chart"
+    },
+    {
+      "title": "ASP Sanjeevani",
+      "subtitle": "Scheme performance",
+      "description": "Review sample ASP Sanjeevani scheme information.",
+      "icon": "spa"
+    }
+  ]
+}

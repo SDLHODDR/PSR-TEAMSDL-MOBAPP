@@ -1,0 +1,38 @@
+[
+  {
+    "routeNo": "1",
+    "name": "Indira Nagar",
+    "verifiedCustomers": 1,
+    "unverifiedCustomers": 8
+  },
+  {
+    "routeNo": "2",
+    "name": "Ashoka Marg",
+    "verifiedCustomers": 4,
+    "unverifiedCustomers": 6
+  },
+  {
+    "routeNo": "3",
+    "name": "Lekha Nagar - Cidco",
+    "verifiedCustomers": 2,
+    "unverifiedCustomers": 7
+  },
+  {
+    "routeNo": "4",
+    "name": "Trimurti Chowk - Cidco",
+    "verifiedCustomers": 5,
+    "unverifiedCustomers": 4
+  },
+  {
+    "routeNo": "5",
+    "name": "Jail Road",
+    "verifiedCustomers": 3,
+    "unverifiedCustomers": 5
+  },
+  {
+    "routeNo": "6",
+    "name": "Satpur",
+    "verifiedCustomers": 6,
+    "unverifiedCustomers": 3
+  }
+]

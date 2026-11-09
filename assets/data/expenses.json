@@ -1,0 +1,40 @@
+{
+  "months": [
+    {
+      "label": "Oct-2026",
+      "status": "submitted",
+      "total": 10705.0,
+      "items": [
+        {"type": "HQ Allowance", "amount": 4500.0, "remark": "-"},
+        {"type": "XHQ Allowance", "amount": 1250.0, "remark": "-"},
+        {"type": "Conveyance Allowance", "amount": 1485.0, "remark": "-"},
+        {"type": "Courier Charges", "amount": 50.0, "remark": "Expense Sent To HO"},
+        {"type": "Telephone Expense", "amount": 250.0, "remark": "Mobile Recharge"},
+        {"type": "Stationary Charges", "amount": 80.0, "remark": "Print Out / Xerox For Meeting"},
+        {"type": "Internet Surfing Charges", "amount": 250.0, "remark": "Net Charges"},
+        {"type": "Railway / Bus Fare", "amount": 590.0, "remark": "Nashik To Pune Bus Fare"},
+        {"type": "Meeting Expense", "amount": 750.0, "remark": "Out station Allowance"},
+        {"type": "Others", "amount": 160.0, "remark": "For paste urgently WAC poster"}
+      ]
+    },
+    {
+      "label": "Sep-2026",
+      "status": "draft",
+      "total": 7795.0,
+      "items": [
+        {"type": "HQ Allowance", "amount": 4500.0, "remark": "-"},
+        {"type": "XHQ Allowance", "amount": 1250.0, "remark": "-"},
+        {"type": "Conveyance Allowance", "amount": 1485.0, "remark": "-"},
+        {"type": "Internet Surfing Charges", "amount": 250.0, "remark": "Net Charges"},
+        {"type": "Courier Charges", "amount": 60.0, "remark": "Expense Sent To HO"},
+        {"type": "Telephone Expense", "amount": 250.0, "remark": "Mobile Recharge"}
+      ]
+    },
+    {
+      "label": "Aug-2026",
+      "status": "notSubmitted",
+      "total": 0.0,
+      "items": []
+    }
+  ]
+}
