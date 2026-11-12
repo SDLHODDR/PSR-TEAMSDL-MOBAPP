@@ -53,6 +53,20 @@ class ApiClient {
     return DashboardData.fromJson(data);
   }
 
+  Future<Map<String, dynamic>> priceList() =>
+      _requestData('GET', '/api/v1/price-list');
+
+  Future<Map<String, dynamic>> nonFieldActivityOptions() =>
+      _requestData('GET', '/api/v1/non-field-activities/options');
+
+  Future<Map<String, dynamic>> nonFieldActivities() =>
+      _requestData('GET', '/api/v1/non-field-activities');
+
+  Future<Map<String, dynamic>> saveNonFieldActivity(
+    Map<String, dynamic> body,
+  ) =>
+      _requestData('POST', '/api/v1/non-field-activities', body: body);
+
   Future<Map<String, dynamic>> tourPlans(String month) => _requestData(
         'GET',
         '/api/v1/tour-plans?month=${Uri.encodeQueryComponent(month)}',
@@ -75,6 +89,47 @@ class ApiClient {
     Map<String, dynamic> body,
   ) =>
       _requestData('POST', '/api/v1/tour-plans/submit', body: body);
+
+  Future<Map<String, dynamic>> routes() =>
+      _requestData('GET', '/api/v1/routes');
+
+  Future<Map<String, dynamic>> routeCustomers(int routeId) =>
+      _requestData('GET', '/api/v1/routes/$routeId/customers');
+
+  Future<Map<String, dynamic>> routeCustomer(int routeId, int customerId) =>
+      _requestData('GET', '/api/v1/routes/$routeId/customers/$customerId');
+
+  Future<Map<String, dynamic>> updateRouteCustomer(
+    int routeId,
+    int customerId,
+    Map<String, dynamic> body,
+  ) =>
+      _requestData(
+        'PUT',
+        '/api/v1/routes/$routeId/customers/$customerId',
+        body: body,
+      );
+
+  Future<Map<String, dynamic>> requestRouteCustomerConsentOtp(
+    int routeId,
+    int customerId,
+  ) =>
+      _requestData(
+        'POST',
+        '/api/v1/routes/$routeId/customers/$customerId/consent/otp',
+        body: const {'consent': true},
+      );
+
+  Future<Map<String, dynamic>> verifyRouteCustomerConsentOtp(
+    int routeId,
+    int customerId,
+    String otp,
+  ) =>
+      _requestData(
+        'POST',
+        '/api/v1/routes/$routeId/customers/$customerId/consent/verify',
+        body: {'otp': otp},
+      );
 
   Future<void> logout() async {
     await _tokenStorage.clear();
@@ -151,6 +206,10 @@ class ApiClient {
         case 'POST':
           return await _client
               .post(uri, headers: headers, body: encodedBody)
+              .timeout(const Duration(seconds: 20));
+        case 'PUT':
+          return await _client
+              .put(uri, headers: headers, body: encodedBody)
               .timeout(const Duration(seconds: 20));
         default:
           throw const ApiException(message: 'Unsupported API request.');
