@@ -56,6 +56,24 @@ class ApiClient {
   Future<Map<String, dynamic>> priceList() =>
       _requestData('GET', '/api/v1/price-list');
 
+  Future<Map<String, dynamic>> expenses() =>
+      _requestData('GET', '/api/v1/expenses');
+
+  Future<Map<String, dynamic>> monthlyReport(String month) => _requestData(
+        'GET',
+        '/api/v1/reports/monthly?month=${Uri.encodeQueryComponent(month)}',
+      );
+
+  Future<Map<String, dynamic>> dailyReport(String date) => _requestData(
+        'GET',
+        '/api/v1/reports/daily?date=${Uri.encodeQueryComponent(date)}',
+      );
+
+  Future<Map<String, dynamic>> pobSobOrders(String month) => _requestData(
+        'GET',
+        '/api/v1/pob-sob?month=${Uri.encodeQueryComponent(month)}',
+      );
+
   Future<Map<String, dynamic>> nonFieldActivityOptions() =>
       _requestData('GET', '/api/v1/non-field-activities/options');
 

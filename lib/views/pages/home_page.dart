@@ -234,7 +234,7 @@ class _HomePageState extends State<HomePage> {
                         // The API metrics include an additional achievement /
                         // growth line, so give the cards enough vertical room
                         // on tablets and phones.
-                        childAspectRatio: isTablet ? 1.55 : 1.15,
+                        childAspectRatio: isTablet ? 1.4 : 1.15,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
@@ -356,7 +356,7 @@ class _HomePageState extends State<HomePage> {
     required bool isTablet,
   }) {
     return Container(
-      padding: EdgeInsets.all(isTablet ? 18 : 12),
+      padding: EdgeInsets.all(isTablet ? 16 : 12),
       decoration: BoxDecoration(
         color: const Color(0xFFE8F1FA),
         borderRadius: BorderRadius.circular(16),
