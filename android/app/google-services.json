@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "896238701311",
+    "project_id": "sdl-psr",
+    "storage_bucket": "sdl-psr.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:896238701311:android:9217b860633703536a9aca",
+        "android_client_info": {
+          "package_name": "com.example.sdl_psr_field_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuDECTna-g8cF9x26iBvsi-8qxqXa2C2E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

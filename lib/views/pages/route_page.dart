@@ -506,9 +506,7 @@ class _RouteCustomerFormState extends State<_RouteCustomerForm> {
       );
       if (!mounted) return;
       setState(() => _otpQueued = true);
-      _message(
-        'OTP queued in Oracle. SMS delivery is pending gateway integration.',
-      );
+      _message('Consent OTP sent to customer.');
     } on ApiException catch (error) {
       _message(error.message);
     } finally {
@@ -629,7 +627,7 @@ class _RouteCustomerFormState extends State<_RouteCustomerForm> {
               if (_otpQueued) ...[
                 const SizedBox(height: 8),
                 const Text(
-                  'OTP is queued. SMS delivery is not configured in the API yet.',
+                  "A consent OTP was sent to the customer's primary phone.",
                   style: TextStyle(color: AppColors.muted),
                 ),
                 const SizedBox(height: 12),

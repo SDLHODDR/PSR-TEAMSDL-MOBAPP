@@ -64,71 +64,43 @@ class _ReportsPageState extends State<ReportsPage> {
             }
 
             final monthlyReport = snapshot.data!;
-            return LayoutBuilder(builder: (context, constraints) {
-              final calendar = constraints.maxWidth >= 850;
-              final columns = calendar ? 7 : 2;
-              final firstDayOffset = calendar
-                  ? DateTime(selectedMonth.year, selectedMonth.month, 1)
-                          .weekday -
-                      1
-                  : 0;
-              return ListView(
-                padding: const EdgeInsets.fromLTRB(12, 16, 12, 28),
-                children: [
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    IconButton(
-                      tooltip: 'Previous month',
-                      onPressed: () => _changeMonth(-1),
-                      icon: const Icon(Icons.arrow_back),
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(12, 16, 12, 28),
+              children: [
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  IconButton(
+                    tooltip: 'Previous month',
+                    onPressed: () => _changeMonth(-1),
+                    icon: const Icon(Icons.arrow_back),
+                  ),
+                  Text(
+                    monthlyReport.label,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 19,
+                      color: AppColors.navy,
                     ),
-                    Text(
-                      monthlyReport.label,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 19,
-                        color: AppColors.navy,
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Next month',
-                      onPressed: selectedMonth.year == DateTime.now().year &&
-                              selectedMonth.month == DateTime.now().month
-                          ? null
-                          : () => _changeMonth(1),
-                      icon: const Icon(Icons.arrow_forward),
-                    ),
-                  ]),
-                  const SizedBox(height: 8),
-                  if (calendar) const _WeekHeader(),
-                  if (monthlyReport.days.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Center(child: Text('No data found.')),
-                    )
-                  else
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: firstDayOffset + monthlyReport.days.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: columns,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        mainAxisExtent: calendar ? 145 : 180,
-                      ),
-                      itemBuilder: (context, index) {
-                        final dayIndex = index - firstDayOffset;
-                        if (dayIndex < 0) return const SizedBox.shrink();
-                        return _ReportDayCard(
-                          day: monthlyReport.days[dayIndex],
-                          compact: calendar,
-                          service: service,
-                        );
-                      },
-                    ),
-                ],
-              );
-            });
+                  ),
+                  IconButton(
+                    tooltip: 'Next month',
+                    onPressed: selectedMonth.year == DateTime.now().year &&
+                            selectedMonth.month == DateTime.now().month
+                        ? null
+                        : () => _changeMonth(1),
+                    icon: const Icon(Icons.arrow_forward),
+                  ),
+                ]),
+                const SizedBox(height: 8),
+                if (monthlyReport.days.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Center(child: Text('No data found.')),
+                  )
+                else
+                  for (final day in monthlyReport.days)
+                    _ReportDayCard(day: day, service: service),
+              ],
+            );
           },
         ),
       );
@@ -137,36 +109,13 @@ class _ReportsPageState extends State<ReportsPage> {
 String _errorMessage(Object? error) =>
     error is ApiException ? error.message : 'Unable to load monthly report.';
 
-class _WeekHeader extends StatelessWidget {
-  const _WeekHeader();
-
-  @override
-  Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.only(bottom: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Text('Mon'),
-            Text('Tue'),
-            Text('Wed'),
-            Text('Thu'),
-            Text('Fri'),
-            Text('Sat'),
-            Text('Sun'),
-          ],
-        ),
-      );
-}
-
 class _ReportDayCard extends StatelessWidget {
   const _ReportDayCard({
     required this.day,
-    required this.compact,
     required this.service,
   });
 
   final MonthlyReportDay day;
-  final bool compact;
   final ReportsService service;
 
   @override
@@ -174,7 +123,7 @@ class _ReportDayCard extends StatelessWidget {
     final isRoute = day.kind == 'route';
     final color = isRoute ? AppColors.navy : Colors.redAccent;
     return Card(
-      margin: EdgeInsets.zero,
+      margin: const EdgeInsets.only(bottom: 8),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: isRoute && day.hasDetails
@@ -187,61 +136,83 @@ class _ReportDayCard extends StatelessWidget {
                 )
             : null,
         child: Padding(
-          padding: EdgeInsets.all(compact ? 8 : 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          child: Row(
             children: [
-              Row(children: [
-                Container(
-                  width: compact ? 29 : 34,
-                  height: compact ? 29 : 34,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(8),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${day.day}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: Center(
-                    child: Text(
-                      '${day.day}',
-                      style: const TextStyle(
-                        color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isRoute
+                          ? 'Route ${day.routeId ?? ''}'
+                          : _kindLabel(day.kind),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Text(
-                    isRoute
-                        ? 'Route ${day.routeId ?? ''}'
-                        : _kindLabel(day.kind),
-                    style: TextStyle(
-                      color: color,
-                      fontSize: compact ? 10 : 12,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(height: 3),
+                    Text(
+                      day.summary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.navy,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
-                ),
-                if (isRoute && day.hasDetails)
-                  const Icon(Icons.chevron_right, size: 16),
-              ]),
-              const SizedBox(height: 9),
-              Text(
-                day.summary,
-                textAlign: TextAlign.center,
-                maxLines: compact ? 2 : 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: AppColors.navy,
-                  fontWeight: FontWeight.w600,
-                  fontSize: compact ? 11 : 14,
+                  ],
                 ),
               ),
               if (isRoute) ...[
-                const SizedBox(height: 7),
-                _SaleLine(label: 'POB', amount: day.pob),
-                _SaleLine(label: 'SOB', amount: day.sob),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'POB',
+                      style: TextStyle(color: AppColors.muted, fontSize: 10),
+                    ),
+                    Text(
+                      '₹${day.pob.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        color: AppColors.navy,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ],
+              if (isRoute && day.hasDetails)
+                const Padding(
+                  padding: EdgeInsets.only(left: 4),
+                  child: Icon(Icons.chevron_right, size: 18),
+                ),
             ],
           ),
         ),
@@ -261,34 +232,6 @@ class _ReportDayCard extends StatelessWidget {
         return 'No report';
     }
   }
-}
-
-class _SaleLine extends StatelessWidget {
-  const _SaleLine({required this.label, required this.amount});
-
-  final String label;
-  final double amount;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 3),
-        child: Row(children: [
-          Text(
-            '$label: ',
-            style: const TextStyle(color: AppColors.muted, fontSize: 11),
-          ),
-          Expanded(
-            child: Text(
-              '₹${amount.toStringAsFixed(2)}',
-              style: const TextStyle(
-                color: AppColors.navy,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ]),
-      );
 }
 
 class ReportDetailsPage extends StatefulWidget {
@@ -384,7 +327,6 @@ class _ReportDetailsPageState extends State<ReportDetailsPage> {
                         runSpacing: 8,
                         children: [
                           _ReportMetric(label: 'POB', amount: widget.day.pob),
-                          _ReportMetric(label: 'SOB', amount: widget.day.sob),
                           _ReportMetric(
                             label: 'Visits',
                             value: '${details.length}',

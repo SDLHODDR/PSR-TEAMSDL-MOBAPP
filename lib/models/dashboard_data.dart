@@ -31,9 +31,15 @@ class DashboardData {
     final json = _unwrap(source);
     final sales = _map(json['sales']);
     return DashboardData(
-      cyTarget: _value(json, const ['cyTgt', 'cy_target', 'cyTarget']),
-      cySale: _value(json, const ['cySale', 'cy_sale', 'cySales']),
-      lySale: _value(json, const ['lySale', 'ly_sale', 'lySales']),
+      cyTarget: _value(sales, const ['cy_target', 'cyTgt', 'cyTarget']) ??
+          _value(json, const ['cyTgt', 'cy_target', 'cyTarget']) ??
+          _value(sales, const ['ytm_target', 'ytmTgt', 'ytmTarget']),
+      cySale: _value(sales, const ['cy_sale', 'cySale', 'cySales']) ??
+          _value(json, const ['cySale', 'cy_sale', 'cySales']) ??
+          _value(sales, const ['ytm_sale', 'ytmSale']),
+      lySale: _value(sales, const ['ly_sale', 'lySale', 'lySales']) ??
+          _value(json, const ['lySale', 'ly_sale', 'lySales']) ??
+          _value(sales, const ['last_year_ytm_sale', 'lyYtmSale']),
       ytmTarget: _value(sales, const ['ytm_target', 'ytmTgt', 'ytmTarget']),
       ytmSale: _value(sales, const ['ytm_sale', 'ytmSale']),
       lastYearYtmSale: _value(
@@ -52,21 +58,19 @@ class DashboardData {
   }
 
   List<Map<String, dynamic>> toSummary() {
-    final hasCurrentYearMetrics =
-        cyTarget != null || cySale != null || lySale != null;
     return [
       {
-        'title': hasCurrentYearMetrics ? 'CY TGT' : 'YTM TGT',
-        'value': (hasCurrentYearMetrics ? cyTarget : ytmTarget) ?? '0',
+        'title': 'CY TGT',
+        'value': (cyTarget ?? ytmTarget) ?? '0',
       },
       {
-        'title': hasCurrentYearMetrics ? 'CY Sale' : 'YTM Sale',
-        'value': (hasCurrentYearMetrics ? cySale : ytmSale) ?? '0',
+        'title': 'CY Sale',
+        'value': (cySale ?? ytmSale) ?? '0',
         'badge': ytmAchievement == null ? null : '$ytmAchievement% YTM Ach',
       },
       {
-        'title': hasCurrentYearMetrics ? 'LY Sale' : 'LY YTM Sale',
-        'value': (hasCurrentYearMetrics ? lySale : lastYearYtmSale) ?? '0',
+        'title': 'LY Sale',
+        'value': (lySale ?? lastYearYtmSale) ?? '0',
         'badge': growth == null ? null : '$growth% Growth',
       },
     ];

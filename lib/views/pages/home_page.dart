@@ -110,11 +110,9 @@ class _HomePageState extends State<HomePage> {
 
             final horizontalPadding = isWideTablet ? 28.0 : 16.0;
 
-            final summaryColumns = isWideTablet
-                ? 4
-                : isTablet
-                    ? 3
-                    : 2;
+            final summaryItems = (dashboard?.hasSalesMetrics ?? false)
+                ? dashboard!.toSummary()
+                : d['summary'] as List;
 
             return Scaffold(
               appBar: AppBar(
@@ -226,27 +224,38 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 14),
 
-                      // Responsive summary cards.
-                      GridView.count(
-                        crossAxisCount: summaryColumns,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        // The API metrics include an additional achievement /
-                        // growth line, so give the cards enough vertical room
-                        // on tablets and phones.
-                        childAspectRatio: isTablet ? 1.4 : 1.15,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          for (final item
-                              in (dashboard?.hasSalesMetrics ?? false)
-                                  ? dashboard!.toSummary()
-                                  : d['summary'])
-                            _buildSummaryCard(
-                              item,
-                              isTablet: isTablet,
-                            ),
-                        ],
+                      SizedBox(
+                        height: 112,
+                        child: LayoutBuilder(
+                          builder: (context, summaryConstraints) {
+                            if (summaryConstraints.maxWidth < 420) {
+                              return ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: summaryItems.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 8),
+                                itemBuilder: (context, index) => SizedBox(
+                                  width: 144,
+                                  child: _buildSummaryCard(summaryItems[index]),
+                                ),
+                              );
+                            }
+                            return Row(
+                              children: [
+                                for (var index = 0;
+                                    index < summaryItems.length;
+                                    index++) ...[
+                                  Expanded(
+                                    child:
+                                        _buildSummaryCard(summaryItems[index]),
+                                  ),
+                                  if (index < summaryItems.length - 1)
+                                    const SizedBox(width: 8),
+                                ],
+                              ],
+                            );
+                          },
+                        ),
                       ),
 
                       const SizedBox(height: 28),
@@ -351,52 +360,66 @@ class _HomePageState extends State<HomePage> {
     return null;
   }
 
-  Widget _buildSummaryCard(
-    dynamic item, {
-    required bool isTablet,
-  }) {
+  Widget _buildSummaryCard(dynamic item) {
     return Container(
-      padding: EdgeInsets.all(isTablet ? 16 : 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFFE8F1FA),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFD8E6F3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(
-            Icons.insights,
-            color: AppColors.navy,
-            size: isTablet ? 28 : 24,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${item['title']}',
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.35,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Icon(
+                Icons.insights_outlined,
+                color: AppColors.navy,
+                size: 16,
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
           Text(
             '${item['value']}',
-            style: TextStyle(
-              fontSize: isTablet ? 23 : 20,
+            style: const TextStyle(
+              fontSize: 21,
               fontWeight: FontWeight.bold,
               color: AppColors.navy,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          if (item['badge'] != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              '${item['badge']}',
-              style: const TextStyle(color: AppColors.muted, fontSize: 11),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-          const SizedBox(height: 3),
-          Text(
-            '${item['title']}',
-            style: TextStyle(fontSize: isTablet ? 14 : 11),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          if (item['badge'] != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.75),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${item['badge']}',
+                style: const TextStyle(color: AppColors.muted, fontSize: 9),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            )
+          else
+            const SizedBox(height: 15),
         ],
       ),
     );

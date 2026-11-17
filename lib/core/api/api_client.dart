@@ -74,6 +74,27 @@ class ApiClient {
         '/api/v1/pob-sob?month=${Uri.encodeQueryComponent(month)}',
       );
 
+  Future<Map<String, dynamic>> pobSobOptions({int? customerId}) => _requestData(
+        'GET',
+        customerId == null
+            ? '/api/v1/pob-sob/options'
+            : '/api/v1/pob-sob/options?customer_id=$customerId',
+      );
+
+  Future<Map<String, dynamic>> pobSobOrder(int orderId, String source) =>
+      _requestData(
+        'GET',
+        '/api/v1/pob-sob/orders/$orderId?source=${Uri.encodeQueryComponent(source)}',
+      );
+
+  Future<Map<String, dynamic>> savePobSobOrder(
+    Map<String, dynamic> body,
+  ) =>
+      _requestData('POST', '/api/v1/pob-sob/orders', body: body);
+
+  Future<Map<String, dynamic>> confirmPobSobOrder(int orderId) =>
+      _requestData('POST', '/api/v1/pob-sob/orders/$orderId/confirm');
+
   Future<Map<String, dynamic>> nonFieldActivityOptions() =>
       _requestData('GET', '/api/v1/non-field-activities/options');
 

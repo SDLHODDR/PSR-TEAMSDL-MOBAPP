@@ -70,6 +70,26 @@ void main() {
     expect(apiClient.requestedRouteDate, '2026-12-03');
   });
 
+  test('includes Leave while excluding non-working activity options', () async {
+    final service = TourPlanService(
+      apiClient: _TourPlanApiClient(
+        {'days': []},
+        activityResponse: {
+          'activities': [
+            {'activity_type': 'L', 'activity_description': 'Leaves'},
+            {'activity_type': 'H', 'activity_description': 'Holiday'},
+            {'activity_type': 'S', 'activity_description': 'Sunday'},
+            {'activity_type': 'R', 'activity_description': 'Remove'},
+          ],
+        },
+      ),
+    );
+
+    final activities = await service.loadActivities();
+
+    expect(activities.map((activity) => activity.description), ['Leaves']);
+  });
+
   test('saves selected activity and route identifiers without relabeling',
       () async {
     final apiClient = _TourPlanApiClient({'days': []});

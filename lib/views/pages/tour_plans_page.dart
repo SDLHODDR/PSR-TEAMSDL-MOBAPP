@@ -5,9 +5,11 @@ import 'package:provider/provider.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/employee_context.dart';
+import '../../models/route_data.dart';
 import '../../providers/employee_provider.dart';
+import '../../services/route_service.dart';
 import '../../services/tour_plan_service.dart';
-import 'field_work_page.dart';
+import 'route_page.dart' as route_page;
 
 class TourPlansPage extends StatefulWidget {
   const TourPlansPage({super.key});
@@ -35,8 +37,6 @@ class _TourPlansPageState extends State<TourPlansPage> {
   String _keyFor(DateTime month, int day) =>
       '${month.year}-${month.month}-$day';
   String _monthPrefix(DateTime month) => '${month.year}-${month.month}-';
-  // Calendar columns are Sunday through Saturday, so Sunday has offset 0.
-  int get _leadingDays => DateTime(_month.year, _month.month, 1).weekday % 7;
 
   bool _isPreloadedHoliday(int day) {
     final date = DateTime(_month.year, _month.month, day);
@@ -175,6 +175,11 @@ class _TourPlansPageState extends State<TourPlansPage> {
 
   int _monthNumber(DateTime value) => value.year * 12 + value.month;
 
+  String _routeTown(String summary) {
+    final separator = summary.indexOf(' - ');
+    return separator < 0 ? summary : summary.substring(separator + 3);
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Tour Plans')),
@@ -184,7 +189,6 @@ class _TourPlansPageState extends State<TourPlansPage> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return _TourPlanLoading(
                 month: _month,
-                leadingDays: _leadingDays,
                 dayCount: DateTime(_month.year, _month.month + 1, 0).day,
                 previous: _monthNumber(_month) <= _monthNumber(_fiscalYearStart)
                     ? null
@@ -205,92 +209,82 @@ class _TourPlansPageState extends State<TourPlansPage> {
                 snapshot.data['status']?.toString().toUpperCase();
             final finalized = planStatus == 'A' || planStatus == 'T';
             final days = finalized ? _finalizedDays(plannedDays) : _draftDays();
-            return LayoutBuilder(builder: (context, constraints) {
-              final wide = constraints.maxWidth >= 850;
-              return ListView(
-                  padding: const EdgeInsets.fromLTRB(12, 14, 12, 28),
-                  children: [
-                    _MonthBar(
-                        month: _month,
-                        status: finalized
-                            ? (planStatus == 'A'
-                                ? 'Approved'
-                                : 'Pending Authorization')
-                            : _status,
-                        previous: _monthNumber(_month) <=
-                                _monthNumber(_fiscalYearStart)
-                            ? null
-                            : () => _move(-1),
-                        next:
-                            _monthNumber(_month) >= _monthNumber(_fiscalYearEnd)
-                                ? null
-                                : () => _move(1)),
-                    const SizedBox(height: 12),
-                    if (!finalized)
-                      _EmptyBanner(
-                        count: _drafts.keys
-                            .where(
-                                (key) => key.startsWith(_monthPrefix(_month)))
-                            .length,
-                      ),
-                    if (wide) const _WeekHeader(),
-                    Builder(builder: (context) {
-                      final leading = wide ? _leadingDays : 0;
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: days.length + leading,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: wide ? 7 : 2,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                          mainAxisExtent: wide ? 144 : 172,
-                        ),
-                        itemBuilder: (context, index) {
-                          if (index < leading) return const SizedBox.shrink();
-                          final day = days[index - leading];
-                          return _TourDayCard(
-                            day: day,
-                            compact: wide,
-                            draft: !finalized,
-                            onTap: !finalized && day['kind'] != 'holiday'
-                                ? () => _editDay(context, day)
-                                : finalized && day['kind'] == 'route'
-                                    ? () => Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => RouteCustomersPage(
-                                              route: {
-                                                'routeNo': day['routeId'],
-                                                'name': day['summary'],
-                                              },
-                                            ),
-                                          ),
-                                        )
-                                    : null,
-                          );
-                        },
-                      );
-                    }),
-                    if (!finalized) ...[
-                      const SizedBox(height: 18),
-                      FilledButton.icon(
-                          onPressed: !_canSubmit || _submitting
-                              ? null
-                              : _submitForAuthorization,
-                          icon: _submitting
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white))
-                              : const Icon(Icons.send_rounded),
-                          label: Text(_submitting
-                              ? 'Sending for authorization...'
-                              : 'Send for Auth')),
-                    ],
-                  ]);
-            });
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(12, 14, 12, 28),
+              children: [
+                _MonthBar(
+                  month: _month,
+                  status: finalized
+                      ? (planStatus == 'A'
+                          ? 'Approved'
+                          : 'Pending Authorization')
+                      : _status,
+                  previous:
+                      _monthNumber(_month) <= _monthNumber(_fiscalYearStart)
+                          ? null
+                          : () => _move(-1),
+                  next: _monthNumber(_month) >= _monthNumber(_fiscalYearEnd)
+                      ? null
+                      : () => _move(1),
+                ),
+                const SizedBox(height: 12),
+                if (!finalized)
+                  _EmptyBanner(
+                    count: _drafts.keys
+                        .where((key) => key.startsWith(_monthPrefix(_month)))
+                        .length,
+                  ),
+                for (final day in days)
+                  _TourDayCard(
+                    day: day,
+                    draft: !finalized,
+                    onTap: !finalized && day['kind'] != 'holiday'
+                        ? () => _editDay(context, day)
+                        : finalized && day['kind'] == 'route'
+                            ? () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        route_page.RouteCustomersPage(
+                                      route: RouteSummary(
+                                        routeId: int.parse('${day['routeId']}'),
+                                        town: _routeTown(
+                                            '${day['summary'] ?? ''}'),
+                                        customerCount: 0,
+                                        verifiedCount: 0,
+                                        unverifiedCount: 0,
+                                      ),
+                                      service: RouteService(),
+                                    ),
+                                  ),
+                                )
+                            : null,
+                  ),
+                if (!finalized) ...[
+                  const SizedBox(height: 10),
+                  FilledButton.icon(
+                    onPressed: !_canSubmit || _submitting
+                        ? null
+                        : _submitForAuthorization,
+                    icon: _submitting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.send_rounded),
+                    label: Text(
+                      _submitting
+                          ? 'Sending for authorization...'
+                          : 'Send for Auth',
+                    ),
+                  ),
+                ],
+              ],
+            );
           },
         ),
       );
@@ -387,120 +381,93 @@ class _TourPlansPageState extends State<TourPlansPage> {
 class _TourPlanLoading extends StatelessWidget {
   const _TourPlanLoading({
     required this.month,
-    required this.leadingDays,
     required this.dayCount,
     this.previous,
     this.next,
   });
 
   final DateTime month;
-  final int leadingDays;
   final int dayCount;
   final VoidCallback? previous;
   final VoidCallback? next;
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-        builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 850;
-          final leading = wide ? leadingDays : 0;
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(12, 14, 12, 28),
-            children: [
-              _MonthBar(
-                month: month,
-                status: 'Loading',
-                previous: previous,
-                next: next,
-              ),
-              const SizedBox(height: 8),
-              const Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    SizedBox(width: 8),
-                    Text('Loading tour plans...'),
-                  ],
+  Widget build(BuildContext context) => ListView(
+        padding: const EdgeInsets.fromLTRB(12, 14, 12, 28),
+        children: [
+          _MonthBar(
+            month: month,
+            status: 'Loading',
+            previous: previous,
+            next: next,
+          ),
+          const SizedBox(height: 8),
+          const Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-              ),
-              const SizedBox(height: 10),
-              if (wide) const _WeekHeader(),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: dayCount + leading,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: wide ? 7 : 2,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  mainAxisExtent: wide ? 144 : 172,
-                ),
-                itemBuilder: (context, index) => index < leading
-                    ? const SizedBox.shrink()
-                    : _TourDayPlaceholder(compact: wide),
-              ),
-            ],
-          );
-        },
+                SizedBox(width: 8),
+                Text('Loading tour plans...'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          for (var day = 0; day < dayCount; day++) const _TourDayPlaceholder(),
+        ],
       );
 }
 
 class _TourDayPlaceholder extends StatelessWidget {
-  const _TourDayPlaceholder({
-    required this.compact,
-  });
-
-  final bool compact;
+  const _TourDayPlaceholder();
 
   @override
   Widget build(BuildContext context) => Card(
-        child: SizedBox(
-          height: compact ? 114 : 150,
-          child: Padding(
-            padding: EdgeInsets.all(compact ? 8 : 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: compact ? 26 : 30,
-                      height: compact ? 26 : 30,
+                      height: 10,
+                      width: double.infinity,
                       decoration: BoxDecoration(
                         color: Colors.black12,
-                        borderRadius: BorderRadius.circular(7),
+                        borderRadius: BorderRadius.circular(5),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
+                    const SizedBox(height: 8),
+                    FractionallySizedBox(
+                      widthFactor: 0.62,
                       child: Container(
-                        height: 10,
+                        height: 8,
                         decoration: BoxDecoration(
                           color: Colors.black12,
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                FractionallySizedBox(
-                  widthFactor: 0.62,
-                  child: Container(
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: Colors.black12,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       );
@@ -556,32 +523,17 @@ class _EmptyBanner extends StatelessWidget {
           ])));
 }
 
-class _WeekHeader extends StatelessWidget {
-  const _WeekHeader();
-  @override
-  Widget build(BuildContext context) => const Padding(
-      padding: EdgeInsets.only(bottom: 6),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-        Text('Sun'),
-        Text('Mon'),
-        Text('Tue'),
-        Text('Wed'),
-        Text('Thu'),
-        Text('Fri'),
-        Text('Sat')
-      ]));
-}
-
 class _TourDayCard extends StatelessWidget {
-  const _TourDayCard(
-      {required this.day,
-      required this.compact,
-      required this.draft,
-      this.onTap});
+  const _TourDayCard({
+    required this.day,
+    required this.draft,
+    this.onTap,
+  });
+
   final Map<String, dynamic> day;
-  final bool compact;
   final bool draft;
   final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final kind = '${day['kind']}';
@@ -589,6 +541,12 @@ class _TourDayCard extends StatelessWidget {
     final populatedDraft = draft && kind == 'draft' && day['route'] != null;
     final empty = kind == 'empty';
     final remark = day['remarks']?.toString() ?? '';
+    final weekday = day['weekday']?.toString();
+    final weekdayLabel = weekday == null
+        ? null
+        : weekday.length > 3
+            ? weekday.substring(0, 3)
+            : weekday;
     final rawCounts = day['counts'];
     const countKeys = {
       'retailer',
@@ -624,86 +582,119 @@ class _TourDayCard extends StatelessWidget {
                 ? AppColors.muted
                 : AppColors.navy;
     return Card(
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-            onTap: onTap,
-            child: Padding(
-                padding: EdgeInsets.all(compact ? 8 : 12),
+      margin: const EdgeInsets.only(bottom: 8),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                alignment: Alignment.center,
                 child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(children: [
-                        Container(
-                            width: compact ? 29 : 34,
-                            height: compact ? 29 : 34,
-                            decoration: BoxDecoration(
-                                color: color,
-                                borderRadius: BorderRadius.circular(8)),
-                            child: Center(
-                                child: Text('${day['date']}',
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold)))),
-                        const SizedBox(width: 7),
-                        Expanded(
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                              Text('${day['title']}',
-                                  maxLines: compact ? 1 : 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                      color: color,
-                                      fontSize: compact ? 11 : 14,
-                                      fontWeight: FontWeight.bold)),
-                              if (!compact &&
-                                  populatedDraft &&
-                                  day['weekday'] != null)
-                                Text('${day['weekday']}',
-                                    style: const TextStyle(
-                                        color: AppColors.muted, fontSize: 10)),
-                            ]))
-                      ]),
-                      if (route || populatedDraft) ...[
-                        SizedBox(height: compact ? 5 : 7),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              for (final item in counts.entries)
-                                if (item.value != null) ...[
-                                  _VisitCount(
-                                    label: _countLabel(item.key),
-                                    value: '${item.value}',
-                                  ),
-                                  const SizedBox(width: 4),
-                                ],
-                            ],
-                          ),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${day['date']}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    if (weekdayLabel != null && weekdayLabel.isNotEmpty)
+                      Text(
+                        weekdayLabel,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          height: 1,
                         ),
-                      ] else if (empty)
-                        Padding(
-                            padding: EdgeInsets.only(top: compact ? 7 : 9),
-                            child: Row(children: [
-                              const Icon(Icons.add_circle_outline,
-                                  size: 16, color: AppColors.muted),
-                              const SizedBox(width: 5),
-                              const Text('Tap to add',
-                                  style: TextStyle(
-                                      color: AppColors.muted, fontSize: 12))
-                            ]))
-                      else if (kind == 'leave' || kind == 'holiday')
-                        Padding(
-                            padding: EdgeInsets.only(top: compact ? 7 : 9),
-                            child: Text(
-                                kind == 'leave' ? 'Leave' : 'Non-working day',
-                                style: TextStyle(color: color, fontSize: 12))),
-                      if (remark.isNotEmpty)
-                        Padding(
-                            padding: EdgeInsets.only(top: compact ? 4 : 6),
-                            child: _RemarkPreview(remark: remark)),
-                    ]))));
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${day['title']}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (route || populatedDraft) ...[
+                      const SizedBox(height: 4),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            for (final item in counts.entries)
+                              if (item.value != null) ...[
+                                _VisitCount(
+                                  label: _countLabel(item.key),
+                                  value: '${item.value}',
+                                ),
+                                const SizedBox(width: 4),
+                              ],
+                          ],
+                        ),
+                      ),
+                    ] else if (empty)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 3),
+                        child: Row(
+                          children: [
+                            Icon(Icons.add_circle_outline,
+                                size: 14, color: AppColors.muted),
+                            SizedBox(width: 4),
+                            Text(
+                              'Tap to add',
+                              style: TextStyle(
+                                  color: AppColors.muted, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (kind == 'leave' || kind == 'holiday')
+                      Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Text(
+                          kind == 'leave' ? 'Leave' : 'Non-working day',
+                          style: TextStyle(color: color, fontSize: 11),
+                        ),
+                      ),
+                    if (remark.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: _RemarkPreview(remark: remark),
+                      ),
+                  ],
+                ),
+              ),
+              if (onTap != null) ...[
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right, size: 18),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -723,6 +714,8 @@ class _PlanEditor extends StatefulWidget {
 }
 
 class _PlanEditorState extends State<_PlanEditor> {
+  static const _leaveDefaultRemark = 'Apply Leaves from Dashboard';
+
   final formKey = GlobalKey<FormState>();
   final remarks = TextEditingController();
   late Future<List<TourPlanActivity>> _activitiesFuture;
@@ -761,12 +754,22 @@ class _PlanEditorState extends State<_PlanEditor> {
       _routesFuture = widget.service.loadRoutes(_date);
     }
     remarks.text = '${widget.initial?['remarks'] ?? ''}';
+    if (_isLeaveActivity(_activityCode, _activityDescription) &&
+        remarks.text.trim().isEmpty) {
+      remarks.text = _leaveDefaultRemark;
+    }
   }
 
   void _selectActivity(TourPlanActivity? value) {
+    final isLeave = _isLeaveActivity(value?.code, value?.description);
     setState(() {
       _activityCode = value?.code;
       _activityDescription = value?.description;
+      if (isLeave && remarks.text.trim().isEmpty) {
+        remarks.text = _leaveDefaultRemark;
+      } else if (!isLeave && remarks.text.trim() == _leaveDefaultRemark) {
+        remarks.clear();
+      }
       _routeId = null;
       _routeLabel = null;
       _routeCounts = const {};
@@ -776,6 +779,10 @@ class _PlanEditorState extends State<_PlanEditor> {
           value?.code == 'F' ? widget.service.loadRoutes(_date) : null;
     });
   }
+
+  bool _isLeaveActivity(String? code, String? description) =>
+      code?.trim().toUpperCase() == 'L' ||
+      const {'LEAVE', 'LEAVES'}.contains(description?.trim().toUpperCase());
 
   TourPlanActivity? _selectedActivity(List<TourPlanActivity> activities) {
     for (final item in activities) {

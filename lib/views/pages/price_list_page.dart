@@ -87,16 +87,6 @@ class _PriceListPageState extends State<PriceListPage> {
         })
         .where((result) => result.products.isNotEmpty)
         .toList(growable: false);
-    final visibleProductCount = filteredCategories.fold<int>(
-      0,
-      (count, result) => count + result.products.length,
-    );
-    final selectedCategories = categories
-        .where((category) => category.id == _selectedCategoryId)
-        .toList(growable: false);
-    final selectedCategory =
-        selectedCategories.isEmpty ? null : selectedCategories.first;
-
     return Column(
       children: [
         Padding(
@@ -154,32 +144,6 @@ class _PriceListPageState extends State<PriceListPage> {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _selectedCategoryId == null
-                      ? 'PRODUCT CATALOGUE'
-                      : selectedCategory?.name.toUpperCase() ??
-                          'PRODUCT CATALOGUE',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: AppColors.muted,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                      ),
-                ),
-              ),
-              Text(
-                '$visibleProductCount ${visibleProductCount == 1 ? 'product' : 'products'}',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppColors.muted,
-                    ),
-              ),
-            ],
-          ),
-        ),
         Expanded(
           child: RefreshIndicator(
             onRefresh: _refresh,
@@ -193,13 +157,6 @@ class _PriceListPageState extends State<PriceListPage> {
                   )
                 else
                   for (final result in filteredCategories) ...[
-                    if (_selectedCategoryId == null)
-                      SliverToBoxAdapter(
-                        child: _CategoryHeading(
-                          title: result.category.name,
-                          count: result.products.length,
-                        ),
-                      ),
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       sliver: SliverList.separated(
@@ -294,46 +251,6 @@ class _CategoryChip extends StatelessWidget {
       );
 }
 
-class _CategoryHeading extends StatelessWidget {
-  const _CategoryHeading({required this.title, required this.count});
-
-  final String title;
-  final int count;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(18, 14, 18, 10),
-        child: Row(
-          children: [
-            Container(
-              width: 4,
-              height: 20,
-              decoration: BoxDecoration(
-                color: AppColors.green,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 9),
-            Expanded(
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: AppColors.navy,
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-            ),
-            Text(
-              '$count',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppColors.muted,
-                  ),
-            ),
-          ],
-        ),
-      );
-}
-
 class _ProductTile extends StatelessWidget {
   const _ProductTile({super.key, required this.product});
 
@@ -382,14 +299,6 @@ class _ProductTile extends StatelessWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'RATE',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.muted,
-                          letterSpacing: 0.8,
-                        ),
                   ),
                 ],
               ),

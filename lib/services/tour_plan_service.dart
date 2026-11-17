@@ -314,7 +314,6 @@ class TourPlanService {
 
   bool _isExcludedActivity(String description) => const {
         'remove',
-        'leave',
         'holiday',
         'sunday',
       }.contains(description.trim().toLowerCase());

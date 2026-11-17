@@ -6,6 +6,8 @@ import '../../core/theme/app_theme.dart';
 import '../../models/pob_sob_data.dart';
 import '../../providers/employee_provider.dart';
 import '../../services/pob_sob_service.dart';
+import 'pob_sob_order_details_page.dart';
+import 'pob_sob_order_form_page.dart';
 
 class PobSobPage extends StatefulWidget {
   const PobSobPage({super.key});
@@ -55,11 +57,45 @@ class _PobSobPageState extends State<PobSobPage> {
     });
   }
 
+  Future<void> _addOrder() async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PobSobOrderFormPage(service: service),
+      ),
+    );
+    if (saved == true && mounted) {
+      setState(() => monthData = _loadMonth(selectedMonth));
+    }
+  }
+
+  Future<void> _openOrder(PobSobOrder order) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PobSobOrderDetailsPage(
+          service: service,
+          order: order,
+        ),
+      ),
+    );
+    if (mounted) {
+      setState(() => monthData = _loadMonth(selectedMonth));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final employee = context.watch<EmployeeProvider>().employee;
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          IconButton(
+            tooltip: 'Add order for today',
+            onPressed: _addOrder,
+            icon: const Icon(Icons.add_shopping_cart_outlined),
+          ),
+        ],
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -163,7 +199,11 @@ class _PobSobPageState extends State<PobSobPage> {
                     const _EmptyOrders()
                   else
                     for (var index = 0; index < orders.length; index++)
-                      _OrderCard(order: orders[index], index: index + 1),
+                      _OrderCard(
+                        order: orders[index],
+                        index: index + 1,
+                        onTap: () => _openOrder(orders[index]),
+                      ),
                 ],
               );
             },
@@ -469,10 +509,15 @@ class _SelectedDayHeader extends StatelessWidget {
 }
 
 class _OrderCard extends StatelessWidget {
-  const _OrderCard({required this.order, required this.index});
+  const _OrderCard({
+    required this.order,
+    required this.index,
+    required this.onTap,
+  });
 
   final PobSobOrder order;
   final int index;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -480,6 +525,7 @@ class _OrderCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 9),
       child: ListTile(
+        onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
         leading: CircleAvatar(
           backgroundColor: (isSob ? AppColors.green : AppColors.navy)
