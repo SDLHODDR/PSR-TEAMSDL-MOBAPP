@@ -30,6 +30,7 @@ class ExpenseMonth {
     required this.status,
     required this.total,
     required this.items,
+    this.isCurrent = false,
   });
 
   final String month;
@@ -37,6 +38,7 @@ class ExpenseMonth {
   final String status;
   final double total;
   final List<ExpenseItem> items;
+  final bool isCurrent;
 
   factory ExpenseMonth.fromJson(Map<String, dynamic> json) {
     final month = json['month']?.toString().trim() ?? '';
@@ -57,6 +59,7 @@ class ExpenseMonth {
       label: label,
       status: status,
       total: total,
+      isCurrent: json['is_current'] == true,
       items: itemsValue.map((value) {
         if (value is! Map) {
           throw const FormatException('Invalid expense item.');

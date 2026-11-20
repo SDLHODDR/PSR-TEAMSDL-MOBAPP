@@ -183,6 +183,7 @@ class _PobSobPageState extends State<PobSobPage> {
                   _MonthCalendar(
                     month: selectedMonth,
                     days: data.days,
+                    type: tab == 0 ? 'POB' : 'SOB',
                     selectedDate: selectedDate ?? selectedDay.date,
                     onSelect: (date) => setState(() => selectedDate = date),
                   ),
@@ -388,12 +389,14 @@ class _MonthCalendar extends StatelessWidget {
   const _MonthCalendar({
     required this.month,
     required this.days,
+    required this.type,
     required this.selectedDate,
     required this.onSelect,
   });
 
   final DateTime month;
   final List<PobSobDay> days;
+  final String type;
   final DateTime selectedDate;
   final ValueChanged<DateTime> onSelect;
 
@@ -413,7 +416,7 @@ class _MonthCalendar extends StatelessWidget {
         if (dayIndex < 0) return const SizedBox.shrink();
         final day = days[dayIndex];
         final selected = _sameDate(day.date, selectedDate);
-        final hasOrders = day.customerCount > 0;
+        final hasOrders = day.orders.any((order) => order.type == type);
         return Padding(
           padding: const EdgeInsets.all(3),
           child: Material(

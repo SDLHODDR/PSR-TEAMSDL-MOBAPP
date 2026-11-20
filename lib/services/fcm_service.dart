@@ -11,24 +11,24 @@ class FCMService {
       sound: true,
     );
 
-    print('Notification permission: ${settings.authorizationStatus}');
+    //print('Notification permission: ${settings.authorizationStatus}');
 
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      print('Notification permission denied');
+      //print('Notification permission denied');
       return null;
     }
 
     // Get FCM device token
     final token = await _messaging.getToken();
 
-    print('========================================');
-    print('SDL PSR FCM DEVICE TOKEN');
-    print(token);
-    print('========================================');
+    // print('========================================');
+    // print('SDL PSR FCM DEVICE TOKEN');
+    // print(token);
+    // print('========================================');
 
     // Listen for token refresh
     _messaging.onTokenRefresh.listen((newToken) {
-      print('FCM Token Refreshed: $newToken');
+      //('FCM Token Refreshed: $newToken');
     });
 
     return token;

@@ -198,10 +198,12 @@ class _TourPlansPageState extends State<TourPlansPage> {
                     : () => _move(1),
               );
             }
-            if (snapshot.hasError)
+            if (snapshot.hasError) {
               return const Center(child: Text('Unable to load tour plans.'));
-            if (!snapshot.hasData)
+            }
+            if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
+            }
             final plannedDays = (snapshot.data['days'] as List)
                 .map((e) => Map<String, dynamic>.from(e as Map))
                 .toList();

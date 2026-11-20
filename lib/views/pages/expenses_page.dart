@@ -5,21 +5,40 @@ import '../../models/expenses_data.dart';
 import '../../services/expenses_service.dart';
 
 class ExpensesPage extends StatefulWidget {
-  const ExpensesPage({super.key});
+  const ExpensesPage({super.key, this.service});
+
+  final ExpensesService? service;
 
   @override
   State<ExpensesPage> createState() => _ExpensesPageState();
 }
 
 class _ExpensesPageState extends State<ExpensesPage> {
-  final ExpensesService service = ExpensesService();
-  int monthIndex = 0;
+  late final ExpensesService service;
+  String? selectedMonth;
   late Future<ExpensesData> expenses;
 
   @override
   void initState() {
     super.initState();
+    service = widget.service ?? ExpensesService();
     expenses = service.load();
+  }
+
+  Future<void> _addExpense(ExpenseMonth month, String currentMonthKey) async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExpenseFormPage(
+          month: month.month,
+          monthLabel: month.label,
+          isCurrentMonth: month.isCurrent || month.month == currentMonthKey,
+        ),
+      ),
+    );
+    if (saved == true && mounted) {
+      setState(() => expenses = service.load());
+    }
   }
 
   @override
@@ -55,10 +74,28 @@ class _ExpensesPageState extends State<ExpensesPage> {
           if (months.isEmpty) {
             return const Center(child: Text('No expense periods available.'));
           }
-          if (monthIndex >= months.length) {
-            monthIndex = 0;
+          final currentMonthKey = _monthKey(DateTime.now());
+          final currentPeriods = months
+              .where(
+                  (month) => month.isCurrent || month.month == currentMonthKey)
+              .toList(growable: false);
+          if (currentPeriods.isEmpty) {
+            return const Center(
+              child: Text('The current expense period is unavailable.'),
+            );
           }
-          final month = months[monthIndex];
+          final currentPeriod = currentPeriods.first;
+          final historicalMonths = months
+              .where(
+                  (month) => !month.isCurrent && month.month != currentMonthKey)
+              .take(3)
+              .toList(growable: false);
+          final selectedPeriods = months
+              .where((month) => month.month == selectedMonth)
+              .toList(growable: false);
+          final month = selectedMonth == null || selectedPeriods.isEmpty
+              ? currentPeriod
+              : selectedPeriods.first;
           final items = month.items;
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
@@ -70,14 +107,18 @@ class _ExpensesPageState extends State<ExpensesPage> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          for (var i = 0; i < months.length; i++)
+                          for (final period in historicalMonths)
                             Padding(
                               padding: const EdgeInsets.only(right: 8),
                               child: ChoiceChip(
-                                label: Text(months[i].label),
-                                selected: i == monthIndex,
-                                onSelected: (_) =>
-                                    setState(() => monthIndex = i),
+                                label: Text(period.label),
+                                selected: period.month == selectedMonth,
+                                onSelected: (_) => setState(
+                                  () => selectedMonth =
+                                      selectedMonth == period.month
+                                          ? null
+                                          : period.month,
+                                ),
                               ),
                             ),
                         ],
@@ -86,11 +127,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
                   ),
                   IconButton(
                     tooltip: 'Add expense',
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const ExpenseFormPage()),
-                    ),
+                    onPressed: () => _addExpense(month, currentMonthKey),
                     icon: const Icon(Icons.add_box, color: AppColors.navy),
                   ),
                 ],
@@ -152,7 +189,7 @@ class _ExpenseTable extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: Text(
-                items[i].remark.isEmpty ? 'Expense entry' : items[i].remark,
+                items[i].remark.isEmpty ? 'Remarks' : items[i].remark,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -275,7 +312,16 @@ class _EmptyExpenseState extends StatelessWidget {
 }
 
 class ExpenseFormPage extends StatefulWidget {
-  const ExpenseFormPage({super.key});
+  const ExpenseFormPage({
+    super.key,
+    required this.month,
+    required this.monthLabel,
+    required this.isCurrentMonth,
+  });
+
+  final String month;
+  final String monthLabel;
+  final bool isCurrentMonth;
 
   @override
   State<ExpenseFormPage> createState() => _ExpenseFormPageState();
@@ -287,14 +333,7 @@ class _ExpenseFormPageState extends State<ExpenseFormPage> {
   final amount = TextEditingController();
   final remark = TextEditingController();
 
-  static const dates = [
-    '24-Sep-2026',
-    '25-Sep-2026',
-    '26-Sep-2026',
-    '27-Sep-2026',
-    '28-Sep-2026',
-    '29-Sep-2026'
-  ];
+  late final List<String> dates;
   static const expenseNames = [
     'Additional Expenses',
     'Banner Print',
@@ -307,6 +346,15 @@ class _ExpenseFormPageState extends State<ExpenseFormPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    dates = _expenseDates(widget.month, widget.isCurrentMonth);
+    if (widget.isCurrentMonth && dates.isNotEmpty) {
+      date = dates.first;
+    }
+  }
+
+  @override
   void dispose() {
     amount.dispose();
     remark.dispose();
@@ -315,13 +363,13 @@ class _ExpenseFormPageState extends State<ExpenseFormPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Daily Expenses (Sep-2026)')),
+        appBar: AppBar(title: Text('Daily Expenses (${widget.monthLabel})')),
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             _fieldLabel('Date'),
             DropdownButtonFormField<String>(
-                value: date,
+                initialValue: date,
                 items: [
                   for (final item in dates)
                     DropdownMenuItem(value: item, child: Text(item))
@@ -330,7 +378,7 @@ class _ExpenseFormPageState extends State<ExpenseFormPage> {
             const SizedBox(height: 14),
             _fieldLabel('Expense Name'),
             DropdownButtonFormField<String>(
-                value: expenseName,
+                initialValue: expenseName,
                 items: [
                   for (final item in expenseNames)
                     DropdownMenuItem(value: item, child: Text(item))
@@ -350,7 +398,7 @@ class _ExpenseFormPageState extends State<ExpenseFormPage> {
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Expense saved locally for demo.')));
-                Navigator.pop(context);
+                Navigator.pop(context, true);
               },
               style: FilledButton.styleFrom(backgroundColor: Colors.green),
               child: const Text('Save and Send For Authorisation'),
@@ -365,4 +413,50 @@ class _ExpenseFormPageState extends State<ExpenseFormPage> {
             style: const TextStyle(
                 color: AppColors.navy, fontWeight: FontWeight.bold)),
       );
+}
+
+String _monthKey(DateTime date) =>
+    '${date.year}-${date.month.toString().padLeft(2, '0')}';
+
+List<String> _expenseDates(String month, bool isCurrentMonth) {
+  final firstOfMonth = DateTime.tryParse('$month-01');
+  if (firstOfMonth == null || _monthKey(firstOfMonth) != month) {
+    return const [];
+  }
+
+  final lastOfMonth = DateTime(firstOfMonth.year, firstOfMonth.month + 1, 0);
+  if (isCurrentMonth) {
+    final today = DateTime.now();
+    final day = today.day.clamp(1, lastOfMonth.day);
+    return [
+      _formatExpenseDate(DateTime(firstOfMonth.year, firstOfMonth.month, day))
+    ];
+  }
+
+  final firstSelectableDate = lastOfMonth.subtract(const Duration(days: 6));
+  return List.generate(
+    7,
+    (index) => _formatExpenseDate(
+      firstSelectableDate.add(Duration(days: index)),
+    ),
+  );
+}
+
+String _formatExpenseDate(DateTime date) {
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  return '${date.day.toString().padLeft(2, '0')}-'
+      '${monthNames[date.month - 1]}-${date.year}';
 }

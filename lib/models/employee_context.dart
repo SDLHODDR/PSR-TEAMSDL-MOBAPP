@@ -71,10 +71,33 @@ class EmployeeContext {
       newGeoId: _int(json['new_geo_id'] ?? geography['new_geo_id']),
       geoLevel: _int(
           json['geo_level'] ?? geography['geo_level'] ?? geography['level']),
-      geoName: _string(json, const ['geo_name', 'geography_name']) ??
-          _string(geography, const ['name', 'geo_name']),
-      hqLabel: _string(json, const ['hq_label', 'hq_name', 'headquarter']) ??
-          _string(geography, const ['hq_label', 'hq_name']),
+      // The legacy profile response calls this field location/territory,
+      // while newer responses call it geo_name. Accept both contracts so the
+      // dashboard does not fall back to showing only the employee code.
+      geoName: _string(json, const [
+            'geo_name',
+            'geography_name',
+            'location',
+            'location_name',
+            'territory',
+            'territory_name',
+          ]) ??
+          _string(
+              geography, const ['name', 'geo_name', 'location', 'territory']),
+      hqLabel: _string(json, const [
+            'hq_label',
+            'hq',
+            'hq_name',
+            'headquarter',
+            'headquarter_name',
+          ]) ??
+          _string(geography, const [
+            'hq_label',
+            'hq',
+            'hq_name',
+            'headquarter',
+            'headquarter_name',
+          ]),
       fyLabel: _string(json, const ['fy_label', 'financial_year_label']) ??
           _string(financialYear, const ['label', 'fy_label']),
       fyFromDate:

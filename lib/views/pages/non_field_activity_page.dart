@@ -6,7 +6,9 @@ import '../../models/non_field_activity_data.dart';
 import '../../services/non_field_activity_service.dart';
 
 class NonFieldActivityPage extends StatefulWidget {
-  const NonFieldActivityPage({super.key});
+  const NonFieldActivityPage({super.key, this.initialDate});
+
+  final DateTime? initialDate;
 
   @override
   State<NonFieldActivityPage> createState() => _NonFieldActivityPageState();
@@ -36,6 +38,7 @@ class _NonFieldActivityPageState extends State<NonFieldActivityPage> {
         builder: (_) => NonFieldActivityFormPage(
           service: _service,
           record: record,
+          initialDate: record == null ? widget.initialDate : null,
         ),
       ),
     );
@@ -435,10 +438,12 @@ class NonFieldActivityFormPage extends StatefulWidget {
     super.key,
     required this.service,
     this.record,
+    this.initialDate,
   });
 
   final NonFieldActivityService service;
   final NonFieldActivityRecord? record;
+  final DateTime? initialDate;
 
   @override
   State<NonFieldActivityFormPage> createState() =>
@@ -459,7 +464,7 @@ class _NonFieldActivityFormPageState extends State<NonFieldActivityFormPage> {
   void initState() {
     super.initState();
     final record = widget.record;
-    _date = record?.date ?? DateTime.now();
+    _date = record?.date ?? widget.initialDate ?? DateTime.now();
     _activityType = record?.activityType;
     _remarks.text = record?.remarks ?? '';
     _options = widget.service.loadOptions();
@@ -565,13 +570,15 @@ class _NonFieldActivityFormPageState extends State<NonFieldActivityFormPage> {
                       ),
                       const SizedBox(height: 9),
                       InkWell(
-                        onTap: _editing || _saving ? null : _pickDate,
+                        onTap: _editing || _saving || widget.initialDate != null
+                            ? null
+                            : _pickDate,
                         borderRadius: BorderRadius.circular(14),
                         child: InputDecorator(
                           decoration: InputDecoration(
                             prefixIcon:
                                 const Icon(Icons.calendar_today_outlined),
-                            suffixIcon: _editing
+                            suffixIcon: _editing || widget.initialDate != null
                                 ? null
                                 : const Icon(Icons.keyboard_arrow_down),
                             enabled: !_saving,

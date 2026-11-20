@@ -345,11 +345,11 @@ class _ReportDetailsPageState extends State<ReportDetailsPage> {
                     ),
                   )
                 else ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
-                    child: Text(
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(4, 8, 4, 10),
+                    child: const Text(
                       'CUSTOMER VISITS',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.muted,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.8,
@@ -375,9 +375,10 @@ class _ReportDetailsPageState extends State<ReportDetailsPage> {
                     _CustomerVisitCard(
                       detail: details[index],
                       index: details
-                              .take(index + 1)
-                              .where((item) => item.unlisted == details[index].unlisted)
-                              .length,
+                          .take(index + 1)
+                          .where((item) =>
+                              item.unlisted == details[index].unlisted)
+                          .length,
                     ),
                   ],
                 ],
@@ -459,9 +460,8 @@ class _CustomerVisitCard extends StatelessWidget {
             detail.customer,
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
-          subtitle: detail.routeId == null
-              ? null
-              : Text('Route ${detail.routeId}'),
+          subtitle:
+              detail.routeId == null ? null : Text('Route ${detail.routeId}'),
           trailing: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,

@@ -46,4 +46,59 @@ void main() {
       {'title': 'LY Sale', 'value': '75000', 'badge': '6.67% Growth'},
     ]);
   });
+
+  test('parses reporting gaps and open requests for the activity gate', () {
+    final dashboard = DashboardData.fromJson({
+      'non_reporting_days': ['12-Jun-2025'],
+      'open_requests': [
+        {'DATE_LABEL': '13-Jun', 'DAY_DATE': '13-Jun-2025'},
+      ],
+    });
+
+    expect(dashboard.nonReportingDays, ['12-Jun-2025']);
+    expect(dashboard.openRequests, ['13-Jun-2025']);
+    expect(dashboard.hasReportingBlock, isTrue);
+  });
+
+  test('preserves reporting status for rejected and delayed dates', () {
+    final dashboard = DashboardData.fromJson({
+      'reporting_status': [
+        {'date': '13-Nov-2026', 'status': 'Rejected'},
+        {'date': '14-Nov-2026', 'status': 'Delayed'},
+      ],
+    });
+
+    expect(dashboard.reportingAlerts.map((item) => item.label), [
+      'Rejected',
+      'Delayed Reporting',
+    ]);
+  });
+
+  test('normalizes short reporting status codes', () {
+    final dashboard = DashboardData.fromJson({
+      'reporting_status': [
+        {'date': '14-Nov-2026', 'status': 'R'},
+        {'date': '16-Nov-2026', 'status': 'D'},
+      ],
+    });
+
+    expect(dashboard.reportingAlerts[0].label, 'Rejected');
+    expect(dashboard.reportingAlerts[1].label, 'Delayed Reporting');
+  });
+
+  test('keeps delayed open requests when another reporting status exists', () {
+    final dashboard = DashboardData.fromJson({
+      'reporting_status': [
+        {'date': '14-Nov-2026', 'status': 'rejected'},
+      ],
+      'open_requests': [
+        {'DAY_DATE': '16-Nov-2026'},
+      ],
+    });
+
+    expect(dashboard.reportingAlerts.map((item) => item.label), [
+      'Rejected',
+      'Delayed Reporting',
+    ]);
+  });
 }

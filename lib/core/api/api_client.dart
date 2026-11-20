@@ -101,6 +101,80 @@ class ApiClient {
   Future<Map<String, dynamic>> nonFieldActivities() =>
       _requestData('GET', '/api/v1/non-field-activities');
 
+  Future<Map<String, dynamic>> dayPlan(String date) => _requestData(
+        'GET',
+        '/api/v1/day-plans?date=${Uri.encodeQueryComponent(date)}',
+      );
+
+  Future<Map<String, dynamic>> dayPlanOptions(String date) => _requestData(
+        'GET',
+        '/api/v1/day-plans/options?date=${Uri.encodeQueryComponent(date)}',
+      );
+
+  Future<Map<String, dynamic>> dayPlanRouteCustomers(
+    int dayPlanId,
+    int routeId,
+  ) =>
+      _requestData(
+        'GET',
+        '/api/v1/day-plans/$dayPlanId/routes/$routeId/customers',
+      );
+
+  Future<Map<String, dynamic>> deleteDayPlanCustomer(
+    int dayPlanId,
+    int customerId,
+  ) =>
+      _requestData(
+          'DELETE', '/api/v1/day-plans/$dayPlanId/customers/$customerId');
+
+  Future<Map<String, dynamic>> dayPlanCustomerActivity({
+    required int dayPlanId,
+    required String activity,
+    int? customerId,
+    int? unlistedCustomerId,
+  }) {
+    final parameters = <String, String>{'activity': activity};
+    if (customerId != null) parameters['customer_id'] = '$customerId';
+    if (unlistedCustomerId != null) {
+      parameters['unlisted_customer_id'] = '$unlistedCustomerId';
+    }
+    return _requestData(
+      'GET',
+      '/api/v1/day-plans/$dayPlanId/activities?'
+          '${Uri(queryParameters: parameters).query}',
+    );
+  }
+
+  Future<Map<String, dynamic>> saveDayPlanCustomerActivity(
+    Map<String, dynamic> body,
+  ) =>
+      _requestData('POST', '/api/v1/day-plans/activities', body: body);
+
+  Future<Map<String, dynamic>> saveDayPlanDraft(
+    Map<String, dynamic> body,
+  ) =>
+      _requestData('POST', '/api/v1/day-plans/draft', body: body);
+
+  Future<Map<String, dynamic>> saveDayPlanOpenRequest(
+    Map<String, dynamic> body,
+  ) =>
+      _requestData('POST', '/api/v1/day-plans/open-requests', body: body);
+
+  Future<Map<String, dynamic>> addDayPlanListedCustomers(
+    Map<String, dynamic> body,
+  ) =>
+      _requestData('POST', '/api/v1/day-plans/visits', body: body);
+
+  Future<Map<String, dynamic>> addDayPlanUnlistedCustomer(
+    Map<String, dynamic> body,
+  ) =>
+      _requestData('POST', '/api/v1/day-plans/unlisted-customers', body: body);
+
+  Future<Map<String, dynamic>> submitDayPlan(
+    Map<String, dynamic> body,
+  ) =>
+      _requestData('POST', '/api/v1/day-plans/submit', body: body);
+
   Future<Map<String, dynamic>> saveNonFieldActivity(
     Map<String, dynamic> body,
   ) =>
@@ -249,6 +323,10 @@ class ApiClient {
         case 'PUT':
           return await _client
               .put(uri, headers: headers, body: encodedBody)
+              .timeout(const Duration(seconds: 20));
+        case 'DELETE':
+          return await _client
+              .delete(uri, headers: headers)
               .timeout(const Duration(seconds: 20));
         default:
           throw const ApiException(message: 'Unsupported API request.');

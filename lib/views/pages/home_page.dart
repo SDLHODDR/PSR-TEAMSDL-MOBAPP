@@ -15,6 +15,8 @@ import 'reports_page.dart';
 import 'tour_plans_page.dart';
 import 'field_work_page.dart';
 import 'non_field_activity_page.dart';
+import 'non_reporting_options_page.dart';
+import 'delayed_reporting_page.dart';
 import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -113,6 +115,8 @@ class _HomePageState extends State<HomePage> {
             final summaryItems = (dashboard?.hasSalesMetrics ?? false)
                 ? dashboard!.toSummary()
                 : d['summary'] as List;
+            final reportingBlocked =
+                dashboard == null || _blocksFieldWorkReporting(dashboard!);
 
             return Scaffold(
               appBar: AppBar(
@@ -259,6 +263,11 @@ class _HomePageState extends State<HomePage> {
                       ),
 
                       const SizedBox(height: 28),
+                      if (dashboard == null ||
+                          dashboard!.hasReportingBlock) ...[
+                        _buildReportingWarning(dashboard),
+                        const SizedBox(height: 18),
+                      ],
 
                       // Tablet: activities and reports side by side.
                       // Mobile: show the sections vertically.
@@ -272,6 +281,7 @@ class _HomePageState extends State<HomePage> {
                                 items: d['activities'],
                                 isTablet: true,
                                 icon: Icons.spa_outlined,
+                                reportingBlocked: reportingBlocked,
                                 onItemTap: (item) {
                                   _openPlaceholder(
                                     context,
@@ -303,6 +313,7 @@ class _HomePageState extends State<HomePage> {
                           items: d['activities'],
                           isTablet: false,
                           icon: Icons.spa_outlined,
+                          reportingBlocked: reportingBlocked,
                           onItemTap: (item) {
                             _openPlaceholder(context, item);
                           },
@@ -519,6 +530,7 @@ class _HomePageState extends State<HomePage> {
     required dynamic items,
     required bool isTablet,
     required IconData icon,
+    bool reportingBlocked = false,
     required ValueChanged<dynamic> onItemTap,
   }) {
     return Column(
@@ -538,6 +550,8 @@ class _HomePageState extends State<HomePage> {
             margin: const EdgeInsets.only(bottom: 10),
             clipBehavior: Clip.antiAlias,
             child: ListTile(
+              enabled: !reportingBlocked ||
+                  !_isReportingActivity('${item['title']}'),
               contentPadding: EdgeInsets.symmetric(
                 horizontal: isTablet ? 16 : 12,
                 vertical: isTablet ? 8 : 4,
@@ -555,21 +569,213 @@ class _HomePageState extends State<HomePage> {
               title: Text(
                 '${item['title']}',
                 style: TextStyle(
+                  color: Colors.black,
                   fontWeight: FontWeight.bold,
                   fontSize: isTablet ? 16 : 14,
                 ),
               ),
               subtitle: Text(
                 '${item['subtitle']}',
-                style: TextStyle(fontSize: isTablet ? 14 : 12),
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: isTablet ? 14 : 12,
+                ),
               ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => onItemTap(item),
+              trailing:
+                  reportingBlocked && _isReportingActivity('${item['title']}')
+                      ? const Icon(Icons.lock_outline, color: Colors.black)
+                      : const Icon(Icons.chevron_right, color: Colors.black),
+              onTap:
+                  reportingBlocked && _isReportingActivity('${item['title']}')
+                      ? null
+                      : () => onItemTap(item),
             ),
           ),
       ],
     );
   }
+
+  Widget _buildReportingWarning(DashboardData? dashboard) {
+    if (dashboard == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          border: Border.all(color: Colors.red.shade200),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          'Reporting status is unavailable. Field Work and Non Field Work are disabled.',
+          style: TextStyle(
+            color: Colors.red.shade800,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+    final alerts = dashboard.reportingAlerts.isNotEmpty
+        ? dashboard.reportingAlerts
+        : [
+            ...dashboard.nonReportingDays.map(
+              (date) => ReportingAlert(date: date, status: 'non_reported'),
+            ),
+            ...dashboard.openRequests.map(
+              (date) => ReportingAlert(date: date, status: 'delayed'),
+            ),
+          ];
+    final allNonReported =
+        alerts.every((alert) => alert.statusKey == 'non_reported');
+    final allPending = alerts.every((alert) =>
+        alert.statusKey == 'pending' ||
+        alert.statusKey == 'pending_report' ||
+        alert.statusKey == 'pending_reports');
+    final allDelayed = alerts.isNotEmpty &&
+        alerts.every((alert) => alert.statusKey == 'delayed');
+    final allRejected = alerts.isNotEmpty &&
+        alerts.every((alert) => alert.statusKey == 'rejected');
+    final heading = allNonReported
+        ? 'Not Reported'
+        : allPending
+            ? 'Pending Reports'
+            : allDelayed
+                ? 'Delayed'
+                : allRejected
+                    ? 'Rejected'
+                    : 'Reporting Status';
+    final reportingBackground =
+        allDelayed ? Colors.amber.shade50 : Colors.red.shade50;
+    final reportingBorder =
+        allDelayed ? Colors.amber.shade200 : Colors.red.shade200;
+    final headingColor = allDelayed ? Colors.black : Colors.red.shade800;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: reportingBackground,
+        border: Border.all(color: reportingBorder),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.business_center,
+                size: 18,
+                color: headingColor,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                heading,
+                style: TextStyle(
+                  color: headingColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              for (final alert in alerts)
+                OutlinedButton(
+                  onPressed: () {
+                    final date = _parseDashboardDate(alert.date);
+                    if (date == null) return;
+                    if (alert.statusKey == 'non_reported') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => NonReportingOptionsPage(date: date),
+                        ),
+                      );
+                      return;
+                    }
+                    if (alert.statusKey == 'delayed') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DelayedReportingPage(date: date),
+                        ),
+                      ).then((_) {
+                        if (mounted) _loadDashboardApi();
+                      });
+                      return;
+                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FieldWorkPage(reportDate: date),
+                      ),
+                    ).then((_) {
+                      if (mounted) _loadDashboardApi();
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _reportingColor(alert),
+                    side: BorderSide(color: _reportingColor(alert)),
+                    backgroundColor:
+                        _reportingColor(alert).withValues(alpha: 0.08),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(alert.date),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _reportingColor(ReportingAlert alert) {
+    return alert.statusKey == 'delayed' ? Colors.black : Colors.red.shade600;
+  }
+
+  bool _blocksFieldWorkReporting(DashboardData dashboard) {
+    if (!dashboard.hasReportingBlock) return false;
+    if (dashboard.reportingAlerts.isEmpty) return true;
+    return dashboard.reportingAlerts
+        .any((alert) => alert.statusKey != 'rejected');
+  }
+
+  DateTime? _parseDashboardDate(String value) {
+    final isoDate = DateTime.tryParse(value);
+    if (isoDate != null) return isoDate;
+    final parts = value.trim().split('-');
+    if (parts.length != 3) return null;
+    const months = {
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12,
+    };
+    final day = int.tryParse(parts[0]);
+    final month = months[parts[1].toLowerCase()];
+    final year = int.tryParse(parts[2]);
+    if (day == null || month == null || year == null) return null;
+    return DateTime(year, month, day);
+  }
+
+  bool _isReportingActivity(String title) =>
+      title == 'Field Work' ||
+      title == 'Non Field Work' ||
+      title == 'Non-Field Work';
 
   void _openPlaceholder(
     BuildContext context,
@@ -591,17 +797,15 @@ class _HomePageState extends State<HomePage> {
     }
     if (item['title'] == 'Tour Plans') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (_) => TourPlansPage()));
+          context, MaterialPageRoute(builder: (_) => const TourPlansPage()));
       return;
     }
     if (item['title'] == 'Field Work') {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (_) => FieldWorkPage()));
+      _openReportingActivity(context, const FieldWorkPage());
       return;
     }
     if (item['title'] == 'Non Field Work') {
-      Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const NonFieldActivityPage()));
+      _openReportingActivity(context, const NonFieldActivityPage());
       return;
     }
     Navigator.push(
@@ -613,5 +817,14 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  void _openReportingActivity(BuildContext context, Widget page) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => page),
+    ).then((_) {
+      if (mounted) _loadDashboardApi();
+    });
   }
 }

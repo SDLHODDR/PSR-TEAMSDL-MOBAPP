@@ -85,7 +85,7 @@ class _MainShellState extends State<MainShell> {
     // Keep each page alive when switching between navigation items.
     final pages = [
       const HomePage(),
-      RoutePage(),
+      const RoutePage(),
       const PriceListPage(),
       const PobSobPage(),
       const SmsTestPage(),
