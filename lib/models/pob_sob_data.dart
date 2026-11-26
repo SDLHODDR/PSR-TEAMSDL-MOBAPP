@@ -175,6 +175,7 @@ class PobSobOrderLine {
   const PobSobOrderLine({
     required this.productId,
     required this.product,
+    required this.category,
     required this.rate,
     required this.quantity,
     required this.freeQuantity,
@@ -183,6 +184,7 @@ class PobSobOrderLine {
 
   final int productId;
   final String product;
+  final String category;
   final double rate;
   final double quantity;
   final double freeQuantity;
@@ -207,6 +209,7 @@ class PobSobOrderLine {
     return PobSobOrderLine(
       productId: productId,
       product: product,
+      category: json['category']?.toString().trim() ?? '',
       rate: rate,
       quantity: quantity,
       freeQuantity: freeQuantity,

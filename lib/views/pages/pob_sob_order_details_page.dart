@@ -207,7 +207,6 @@ class _PobSobOrderDetailsPageState extends State<PobSobOrderDetailsPage> {
                     for (var index = 0; index < order.items.length; index++)
                       _OrderLineCard(
                         item: order.items[index],
-                        index: index + 1,
                       ),
                   ],
                 ),
@@ -360,10 +359,9 @@ class _OrderStatus extends StatelessWidget {
 }
 
 class _OrderLineCard extends StatelessWidget {
-  const _OrderLineCard({required this.item, required this.index});
+  const _OrderLineCard({required this.item});
 
   final PobSobOrderLine item;
-  final int index;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -371,11 +369,18 @@ class _OrderLineCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 17,
-                backgroundColor: AppColors.navy.withValues(alpha: 0.08),
-                foregroundColor: AppColors.navy,
-                child: Text('$index'),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.navy.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  _productIcon(item),
+                  color: AppColors.navy,
+                  size: 21,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -409,6 +414,31 @@ class _OrderLineCard extends StatelessWidget {
           ),
         ),
       );
+}
+
+IconData _productIcon(PobSobOrderLine item) {
+  final description = '${item.category} ${item.product}'.toLowerCase();
+  if (description.contains('tablet') ||
+      description.contains('tab ') ||
+      description.contains('capsule') ||
+      description.contains('cap ')) {
+    return Icons.medication_outlined;
+  }
+  if (description.contains('syrup') ||
+      description.contains('suspension') ||
+      description.contains('liquid')) {
+    return Icons.local_drink_outlined;
+  }
+  if (description.contains('injection') || description.contains('injectable')) {
+    return Icons.vaccines_outlined;
+  }
+  if (description.contains('cream') ||
+      description.contains('gel') ||
+      description.contains('ointment')) {
+    return Icons.healing_outlined;
+  }
+  if (description.contains('drop')) return Icons.water_drop_outlined;
+  return Icons.inventory_2_outlined;
 }
 
 class _DetailsError extends StatelessWidget {

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../services/non_field_activity_service.dart';
-import 'non_field_activity_page.dart';
 import 'delayed_reporting_page.dart';
+import 'non_field_activity_page.dart';
 
 class NonReportingOptionsPage extends StatelessWidget {
   const NonReportingOptionsPage({super.key, required this.date});

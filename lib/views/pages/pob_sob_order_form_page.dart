@@ -346,62 +346,82 @@ class _ProductQuantityCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final wideEnough = constraints.maxWidth >= 520;
+              final name = Text(
                 product.name,
+                maxLines: wideEnough ? 1 : 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: AppColors.navy,
                   fontWeight: FontWeight.w600,
                 ),
-              ),
-              if (product.category.isNotEmpty)
-                Text(
-                  product.category,
-                  style: const TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 12,
+              );
+              final rate = Text(
+                'Rate: ${product.rate.toStringAsFixed(2)}',
+                style: const TextStyle(fontSize: 13),
+              );
+              final quantityField = SizedBox(
+                width: 82,
+                child: TextFormField(
+                  key: ValueKey('qty-${product.id}'),
+                  initialValue: quantity,
+                  onChanged: onQuantityChanged,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Qty',
+                    isDense: true,
                   ),
                 ),
-              const SizedBox(height: 8),
-              Row(
+              );
+              final freeField = SizedBox(
+                width: 82,
+                child: TextFormField(
+                  key: ValueKey('free-${product.id}'),
+                  initialValue: freeQuantity,
+                  onChanged: onFreeQuantityChanged,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Free',
+                    isDense: true,
+                  ),
+                ),
+              );
+
+              if (wideEnough) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(child: name),
+                    const SizedBox(width: 12),
+                    rate,
+                    const SizedBox(width: 12),
+                    quantityField,
+                    const SizedBox(width: 8),
+                    freeField,
+                  ],
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text('Rate: ${product.rate.toStringAsFixed(2)}'),
-                  ),
-                  SizedBox(
-                    width: 82,
-                    child: TextFormField(
-                      key: ValueKey('qty-${product.id}'),
-                      initialValue: quantity,
-                      onChanged: onQuantityChanged,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Qty',
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 82,
-                    child: TextFormField(
-                      key: ValueKey('free-${product.id}'),
-                      initialValue: freeQuantity,
-                      onChanged: onFreeQuantityChanged,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Free',
-                        isDense: true,
-                      ),
-                    ),
+                  name,
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(child: rate),
+                      quantityField,
+                      const SizedBox(width: 8),
+                      freeField,
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       );

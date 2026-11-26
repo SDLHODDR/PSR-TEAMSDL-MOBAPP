@@ -167,6 +167,7 @@ class _PriceListPageState extends State<PriceListPage> {
                             '${result.category.id}-${result.products[index].id}-$index',
                           ),
                           product: result.products[index],
+                          category: result.category.name,
                         ),
                       ),
                     ),
@@ -252,9 +253,14 @@ class _CategoryChip extends StatelessWidget {
 }
 
 class _ProductTile extends StatelessWidget {
-  const _ProductTile({super.key, required this.product});
+  const _ProductTile({
+    super.key,
+    required this.product,
+    required this.category,
+  });
 
   final PriceListProduct product;
+  final String category;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -269,8 +275,8 @@ class _ProductTile extends StatelessWidget {
                   color: AppColors.green.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: const Icon(
-                  Icons.spa_outlined,
+                child: Icon(
+                  _productIcon(category, product.name),
                   color: AppColors.navy,
                   size: 22,
                 ),
@@ -306,6 +312,31 @@ class _ProductTile extends StatelessWidget {
           ),
         ),
       );
+}
+
+IconData _productIcon(String category, String product) {
+  final description = '$category $product'.toLowerCase();
+  if (description.contains('tablet') ||
+      description.contains('tab ') ||
+      description.contains('capsule') ||
+      description.contains('cap ')) {
+    return Icons.medication_outlined;
+  }
+  if (description.contains('syrup') ||
+      description.contains('suspension') ||
+      description.contains('liquid')) {
+    return Icons.local_drink_outlined;
+  }
+  if (description.contains('injection') || description.contains('injectable')) {
+    return Icons.vaccines_outlined;
+  }
+  if (description.contains('cream') ||
+      description.contains('gel') ||
+      description.contains('ointment')) {
+    return Icons.healing_outlined;
+  }
+  if (description.contains('drop')) return Icons.water_drop_outlined;
+  return Icons.inventory_2_outlined;
 }
 
 class _PriceListError extends StatelessWidget {

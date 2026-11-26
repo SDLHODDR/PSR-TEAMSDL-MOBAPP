@@ -4,7 +4,6 @@ import 'home_page.dart';
 import 'route_page.dart';
 import 'price_list_page.dart';
 import 'pob_sob_page.dart';
-import 'sms_test_page.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -37,11 +36,6 @@ class _MainShellState extends State<MainShell> {
       selectedIcon: Icon(Icons.shopping_bag),
       label: 'POB/SOB',
     ),
-    NavigationDestination(
-      icon: Icon(Icons.sms_outlined),
-      selectedIcon: Icon(Icons.sms),
-      label: 'SMS Test',
-    ),
   ];
 
   static const List<NavigationRailDestination> _tabletDestinations = [
@@ -65,11 +59,6 @@ class _MainShellState extends State<MainShell> {
       selectedIcon: Icon(Icons.shopping_bag),
       label: Text('POB/SOB'),
     ),
-    NavigationRailDestination(
-      icon: Icon(Icons.sms_outlined),
-      selectedIcon: Icon(Icons.sms),
-      label: Text('SMS Test'),
-    ),
   ];
 
   @override
@@ -88,7 +77,6 @@ class _MainShellState extends State<MainShell> {
       const RoutePage(),
       const PriceListPage(),
       const PobSobPage(),
-      const SmsTestPage(),
     ];
 
     if (isLandscapeTablet) {

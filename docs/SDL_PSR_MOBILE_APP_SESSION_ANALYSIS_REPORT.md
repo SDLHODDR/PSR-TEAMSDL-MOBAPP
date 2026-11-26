@@ -1,0 +1,141 @@
+# SDL PSR Mobile App — Consolidated Session and Implementation Analysis
+
+**Report date:** 24 November 2026  
+**Scope:** Flutter mobile/web application, PHP API, Oracle-backed workflows, available Codex/agent-host session metadata, and the supplied SDL analysis report.
+
+## Executive summary
+
+SDL PSR is an employee field-force application with a substantial Flutter implementation connected to an authenticated PHP API and Oracle business workflows. The inspected code supports authentication, dashboard data, tour planning, day-plan execution, route/customer work, POB/SOB ordering, expenses, reports, non-field activity, consent OTP, notifications, and invoice PDF generation.
+
+The available project session index provides useful development history: 41 project-related Codex/agent-host sessions were found, beginning 21 October 2026 and continuing through 24 November 2026. The session titles map closely to the observed implementation milestones and defect investigations.
+
+Exact AI model names, prompt tokens, output tokens, credits, and billing cost are **not available** in the repositories or exposed session metadata. The report therefore distinguishes measured implementation evidence from unavailable AI-usage metrics. Git and session change counts are not token counts.
+
+## 1. AI model, token, and credit accounting
+
+| Metric | Result | Confidence / explanation |
+|---|---|---|
+| Model used per session | Not exposed | The session index contains titles, dates, status, and change metadata, but no model/provider field. |
+| Input tokens | Not available | No prompt export or token telemetry was present in either repository. |
+| Output tokens | Not available | No completion-token telemetry was present. |
+| Total tokens | Not computable | Cannot be derived reliably from source lines, Git diffs, or session titles. |
+| Credits / cost | Not available | No provider billing export, invoice, or credit ledger was found. |
+| Copilot usage | Not available | No Copilot Chat transcript, usage export, model usage report, or billing data was found. |
+| Runtime AI in the app | None identified | The application uses conventional Flutter/Dart, PHP, Oracle, Firebase Messaging, and PDF libraries; no runtime LLM integration was found. |
+
+### What is measurable
+
+- 41 project-related sessions indexed; 40 non-archived at report time.
+- Session dates: 21 October 2026 through 24 November 2026.
+- Session metadata change proxy: 14,690 additions and 3,091 deletions across indexed session worktrees. This is not a source-of-truth Git total and is not an AI-token metric.
+- Flutter source: 49 Dart files and 11,732 non-blank lines.
+- Flutter tests: 12 Dart test files and 961 non-blank lines.
+- Backend baseline from the supplied report: 46 PHP files, approximately 7,426 PHP lines, 13 models, 13 controllers, and 44 active route declarations.
+
+## 2. Session timeline and development themes
+
+| Period | Session evidence | Implementation / investigation outcome |
+|---|---|---|
+| 21–31 Oct | API project setup, employee context flow, login/dashboard changes, home assertion debugging | Established Flutter shell, authentication context, and initial API integration. |
+| 2–7 Nov | Git ignore setup, CORS troubleshooting, tour-plan management, tour navigation redesign, legacy comparison, field-work API integration | Moved from starter/mock screens toward API-backed tour and field execution flows. |
+| 9–12 Nov | Route-plan page integration, Oracle statement error, backend tour-plan flow, legacy expense flow | Added route/customer data and expense workflows; resolved backend/database integration issues. |
+| 17–18 Nov | Switching to ChatGPT Codex, POB/SOB layout and calendar work, product/category UI changes | Expanded order functionality and refined order/report presentation. |
+| 19–21 Nov | Legacy discrepancy analysis, production API readiness, API path update, Composer/autoload, DateTime and database error handling, compatibility review, app run | Hardened backend and production configuration; investigated differences between legacy and mobile behavior. |
+| 23 Nov | Field-work compile error, 503 visit save, 404 activity load, reporting status colors | Debugged field-work edge cases and reporting presentation. The current source contains the `_intList` helper, so the compile error is historical evidence rather than a current finding. |
+| 24 Nov | Existing analysis report review and this consolidated report request | Consolidated implementation evidence with available session metadata. |
+
+## 3. Flutter implementation analysis
+
+### Architecture and setup
+
+- Package: `sdl_psr_field_app`, version `1.0.0+1`.
+- Dart SDK constraint: `>=3.3.0 <4.0.0`.
+- Android and web targets are present.
+- Core dependencies include `http`, `flutter_secure_storage`, `provider`, `firebase_core`, `firebase_messaging`, `pdf`, and `printing`.
+- API/core, models, services, providers, views, assets, and tests are separated into recognizable layers.
+- Secure access-token storage and session restoration are implemented through the API layer and app lifecycle handling.
+
+### Field-work implementation evidence
+
+The inspected [field_work_page.dart](../lib/views/pages/field_work_page.dart) is the main mobile day-plan workflow. It currently includes:
+
+1. Loading a day plan by report date.
+2. Loading start-town, route, customer, product, and activity options from `DayPlanService`.
+3. Remarks entry with a 500-character limit.
+4. Draft save with validation for required remarks and start town.
+5. Planned-route listed customer selection.
+6. Selection from another route.
+7. Unlisted customer creation.
+8. Customer actions for detailing, sample/input, POB/SOB, and availability-related work.
+9. Customer activity data loading and saving.
+10. Customer deletion and related data handling.
+11. Summary and submit-for-approval flow.
+12. Responsive layout behavior: two or four action columns based on available width.
+13. API error display and retry/reload behavior.
+
+The matching [day_plan_service.dart](../lib/services/day_plan_service.dart) provides the API boundary for loading plans, route customers, customer activity, saving activity, deleting customers, saving drafts, delayed reporting, and submitting plans.
+
+### Functional inventory
+
+| Capability | Flutter evidence | Backend/API evidence | Assessment |
+|---|---|---|---|
+| Authentication | Login page, API client, secure token storage, auth events, employee provider | Login, logout, current employee, bearer authentication, employee access middleware | Implemented vertical slice |
+| Dashboard | Dashboard model/service and home shell | Dashboard endpoint/model | Implemented |
+| Tour planning | Tour-plan page and service | Activity options, route options, monthly list, draft and submit endpoints | Implemented |
+| Day-plan field work | Field-work page and day-plan service | Load/options, draft, visits, unlisted customers, activities, delayed reporting, submit | Implemented, with historical integration defects investigated |
+| Route/customer work | Route page/service, customer profile and OTP flows | Routes, customers, profile update, consent OTP request/verification | Implemented |
+| POB/SOB orders | Listing, form, details, product/customer options, invoice PDF | Options, order read/save, confirmation | Implemented |
+| Price list | Price-list page/service/model | Price-list endpoint/model | Implemented |
+| Non-field activity | Listing/options/form | Listing/options/save endpoints | Implemented |
+| Expenses | Monthly listing, month selection, submission form | Expense endpoint/model | Implemented |
+| Reports | Monthly/daily reports and route-day details | Reports endpoints/model | Implemented |
+| Notifications | Firebase Core and FCM service | External Firebase configuration | Configured; release verification required |
+| Platform setup | Android resources, web manifest, splash/brand assets | N/A | Present; release signing/configuration should be verified |
+
+## 4. PHP API and Oracle workflow analysis
+
+The supplied backend report identifies an authenticated PHP API with Oracle-backed employee-scoped business data. The active route set covers health checks, authentication, dashboard, expenses, reports, price lists, tour plans, day plans, routes/customers, POB/SOB, and non-field activities.
+
+The supplied [DayPlanModel.php](../../mobieapp_psr/app/Models/DayPlanModel.php) is the principal server-side workflow model for the field-work implementation. Its observed responsibilities include loading plans and options, saving drafts, opening delayed-reporting requests, adding/deleting listed customers, adding unlisted customers, reading/saving customer activity, and final submission.
+
+Important rules include future-date rejection, previous-date delayed reporting, required/capped remarks, active employee/division validation, route/customer ownership checks, activity-type constraints, transactional writes, and dependent-record deletion.
+
+Authentication documentation indicates a stateless JWT initial-release flow with a 30-minute access-token lifetime. Logout is client-side in that documented release; an issued JWT can remain valid until expiry. This is an application security behavior, not AI-token usage.
+
+## 5. Quality and release observations
+
+### Positive evidence
+
+- 12 Flutter test files cover dashboard, employee context, expenses, non-field activity, POB/SOB, price list, reports, tour plans, SMS consent, and widget behavior.
+- The field-work UI includes validation, loading states, retry handling, responsive layout, and API error messages.
+- The backend uses validation, transactions, authentication middleware, employee access checks, and structured errors.
+- Session history shows active investigation of legacy-system discrepancies and production API behavior rather than only UI prototyping.
+
+### Follow-up items
+
+- Run `flutter analyze` and the full Flutter test suite on the current checkout.
+- Add focused integration tests for day-plan visit saving, customer activity persistence, delayed reporting, submission, and authentication expiry.
+- Re-test the historical 503 visit-save and 404 activity-load cases against the current backend and Flutter source.
+- Refresh the Flutter README to describe the current API-backed application instead of the original starter state.
+- Verify production API URL, Firebase configuration, Android signing, notification permissions, release build settings, and CORS.
+- Review the documented JWT logout behavior and decide whether revocation or short-lived access tokens are required for production.
+
+## 6. Methodology and limitations
+
+Sources reviewed:
+
+- Existing SDL report: `D:/projects/mobieapp_psr/docs/SDL_PSR_MOBILE_APP_ANALYSIS_REPORT.md`.
+- Flutter project source and tests under `D:/projects/psr-mobiapp`.
+- Backend source and documentation under `D:/projects/mobieapp_psr`.
+- Available project session index exposed by the Codex workspace.
+
+The session index is metadata, not a transcript or provider billing export. Copilot sessions could not be consolidated because no Copilot session export or connected Copilot telemetry was available in the workspace. No model or token value has been guessed or estimated.
+
+To complete exact AI accounting, export a CSV/JSON report from each provider containing at least: session ID, provider, model, start/end time, input tokens, output tokens, cached tokens, total tokens, credits/cost, and currency. Those records can then be joined to the session timeline in this report.
+
+## 7. Overall conclusion
+
+The SDL PSR mobile app has progressed from a starter implementation to a broad field-force application with a Flutter front end, authenticated PHP API, and Oracle-backed workflows. The strongest implemented areas are field execution, route/customer work, tour planning, POB/SOB, reports, expenses, and non-field activity.
+
+The current evidence supports a detailed implementation and development-history report, but not a defensible claim about which AI model consumed how many tokens or credits. Exact AI usage remains an external telemetry-data requirement.
+

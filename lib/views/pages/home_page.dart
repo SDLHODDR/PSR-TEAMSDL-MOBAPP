@@ -14,9 +14,9 @@ import 'expenses_page.dart';
 import 'reports_page.dart';
 import 'tour_plans_page.dart';
 import 'field_work_page.dart';
+import 'asp_campaign_page.dart';
 import 'non_field_activity_page.dart';
 import 'non_reporting_options_page.dart';
-import 'delayed_reporting_page.dart';
 import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -115,6 +115,11 @@ class _HomePageState extends State<HomePage> {
             final summaryItems = (dashboard?.hasSalesMetrics ?? false)
                 ? dashboard!.toSummary()
                 : d['summary'] as List;
+            final hasAspAccess = employee?.divisions.contains(1) == true;
+            final reports = (d['reports'] as List)
+                .where(
+                    (item) => item['title'] != 'ASP Sanjeevani' || hasAspAccess)
+                .toList(growable: false);
             final reportingBlocked =
                 dashboard == null || _blocksFieldWorkReporting(dashboard!);
 
@@ -152,7 +157,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _greeting(),
+                      _greeting(employeeName),
                       style: TextStyle(
                         fontSize: isTablet ? 21 : 18,
                         fontWeight: FontWeight.w600,
@@ -211,10 +216,7 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (employee != null) ...[
-                        _buildEmployeeContextCard(
-                          employee,
-                          isTablet: isTablet,
-                        ),
+                        _buildEmployeeContextCard(employee, isTablet: isTablet),
                         const SizedBox(height: 22),
                       ],
                       const Text(
@@ -229,7 +231,7 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 14),
 
                       SizedBox(
-                        height: 112,
+                        height: 76,
                         child: LayoutBuilder(
                           builder: (context, summaryConstraints) {
                             if (summaryConstraints.maxWidth < 420) {
@@ -294,7 +296,7 @@ class _HomePageState extends State<HomePage> {
                             Expanded(
                               child: _buildSection(
                                 title: 'Reports',
-                                items: d['reports'],
+                                items: reports,
                                 isTablet: true,
                                 icon: Icons.bar_chart,
                                 onItemTap: (item) {
@@ -321,7 +323,7 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(height: 24),
                         _buildSection(
                           title: 'Reports',
-                          items: d['reports'],
+                          items: reports,
                           isTablet: false,
                           icon: Icons.bar_chart,
                           onItemTap: (item) {
@@ -355,12 +357,16 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  String _greeting() {
+  String _greeting(String employeeName) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning!';
-    if (hour < 17) return 'Good afternoon!';
-    if (hour < 21) return 'Good evening!';
-    return 'Good night!';
+    final greeting = hour < 12
+        ? 'Good Morning'
+        : hour < 17
+            ? 'Good Afternoon'
+            : hour < 21
+                ? 'Good Evening'
+                : 'Good Night';
+    return '$greeting ! $employeeName';
   }
 
   String? _employeeValue(Map<String, dynamic> employee, List<String> keys) {
@@ -372,6 +378,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildSummaryCard(dynamic item) {
+    final title = '${item['title']}';
+    final isComparisonCard = title == 'CY Sale' || title == 'LY Sale';
+    final badge = '${item['badge'] ?? '-'}';
+    final metricLabel = title == 'CY Sale' ? 'YTM Ach' : 'Growth';
+    final metricValue =
+        badge.replaceFirst(RegExp(r'\s*(YTM Ach|Growth).*$'), '').trim();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -381,81 +393,111 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${item['title']}',
+          if (isComparisonCard)
+            Row(
+              children: [
+                Expanded(
+                  child: _summaryMetric(
+                    label: metricLabel,
+                    value: metricValue.isEmpty ? '-' : metricValue,
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 38,
+                  color: const Color(0xFFD0DEEB),
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _summaryMetric(
+                          label: title,
+                          value: '${item['value']}',
+                        ),
+                      ),
+                      const Icon(Icons.insights_outlined,
+                          color: AppColors.navy, size: 16),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                Text(
+                  title,
                   style: const TextStyle(
                     color: AppColors.muted,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.35,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const Icon(
-                Icons.insights_outlined,
-                color: AppColors.navy,
-                size: 16,
-              ),
-            ],
-          ),
-          Text(
-            '${item['value']}',
-            style: const TextStyle(
-              fontSize: 21,
-              fontWeight: FontWeight.bold,
-              color: AppColors.navy,
+                const SizedBox(width: 6),
+                Text(
+                  '${item['value']}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.navy,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(Icons.insights_outlined,
+                    color: AppColors.navy, size: 16),
+              ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (item['badge'] != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.75),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '${item['badge']}',
-                style: const TextStyle(color: AppColors.muted, fontSize: 9),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            )
-          else
-            const SizedBox(height: 15),
         ],
       ),
     );
   }
 
+  Widget _summaryMetric({required String label, required String value}) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 5),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (label.isNotEmpty) ...[
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 3),
+            ],
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.navy,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+
   Widget _buildEmployeeContextCard(
     EmployeeContext employee, {
     required bool isTablet,
   }) {
-    // final details = <String>[
-    //   if (employee.empCode != null) 'Employee Code: ${employee.empCode}',
-    //   // if (employee.empId != null) 'Employee ID: ${employee.empId}',
-    //   //if (employee.empLevel != null) 'Level: ${employee.empLevel}',
-    //   //if (employee.loginType != null) 'Type: ${employee.loginType}',
-    //   if (employee.geoId != null) 'Geography: ${employee.geoId}',
-    //   if (employee.divisions.isNotEmpty)
-    //     'Divisions: ${employee.divisions.join(', ')}',
-    // ];
     final details = <String>[
       if (employee.empCode != null) 'Employee Code: ${employee.empCode}',
       if (employee.geoName != null) 'GEO: ${employee.geoName}',
       if (employee.divisionName != null) 'Division: ${employee.divisionName}',
       if (employee.hqLabel != null) 'HQ: ${employee.hqLabel}',
     ];
-    final email = employee.empEmail;
     final photo = employee.empPic;
     final photoUrl = photo == null
         ? null
@@ -480,11 +522,8 @@ class _HomePageState extends State<HomePage> {
                         height: isTablet ? 60 : 52,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
-                            const Icon(
-                          Icons.person,
-                          color: AppColors.navy,
-                          size: 30,
-                        ),
+                            const Icon(Icons.person,
+                                color: AppColors.navy, size: 30),
                       ),
                     ),
             ),
@@ -493,25 +532,9 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    employee.empName ?? employee.loginId ?? 'Employee',
-                    style: TextStyle(
-                      color: AppColors.navy,
-                      fontSize: isTablet ? 20 : 17,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (email != null) ...[
-                    const SizedBox(height: 3),
-                    Text(email, overflow: TextOverflow.ellipsis),
-                  ],
-                  if (details.isNotEmpty) ...[
-                    const SizedBox(height: 7),
-                    Text(
-                      details.join('  •  '),
-                      style: const TextStyle(color: AppColors.muted),
-                    ),
-                  ],
+                  if (details.isNotEmpty)
+                    Text(details.join('  •  '),
+                        style: const TextStyle(color: AppColors.muted)),
                   if (employee.fyLabel != null) ...[
                     const SizedBox(height: 4),
                     Text('Financial year: ${employee.fyLabel}'),
@@ -692,14 +715,16 @@ class _HomePageState extends State<HomePage> {
                         MaterialPageRoute(
                           builder: (_) => NonReportingOptionsPage(date: date),
                         ),
-                      );
+                      ).then((_) {
+                        if (mounted) _loadDashboardApi();
+                      });
                       return;
                     }
                     if (alert.statusKey == 'delayed') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => DelayedReportingPage(date: date),
+                          builder: (_) => FieldWorkPage(reportDate: date),
                         ),
                       ).then((_) {
                         if (mounted) _loadDashboardApi();
@@ -717,9 +742,8 @@ class _HomePageState extends State<HomePage> {
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: _reportingColor(alert),
-                    side: BorderSide(color: _reportingColor(alert)),
-                    backgroundColor:
-                        _reportingColor(alert).withValues(alpha: 0.08),
+                    side: BorderSide(color: _reportingBorderColor(alert)),
+                    backgroundColor: _reportingBackgroundColor(alert),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -736,7 +760,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Color _reportingColor(ReportingAlert alert) {
+    return alert.statusKey == 'delayed' ? Colors.black : AppColors.navy;
+  }
+
+  Color _reportingBorderColor(ReportingAlert alert) {
     return alert.statusKey == 'delayed' ? Colors.black : Colors.red.shade600;
+  }
+
+  Color _reportingBackgroundColor(ReportingAlert alert) {
+    return alert.statusKey == 'delayed'
+        ? Colors.amber.shade300
+        : Colors.red.shade50;
   }
 
   bool _blocksFieldWorkReporting(DashboardData dashboard) {
@@ -792,6 +826,13 @@ class _HomePageState extends State<HomePage> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ReportsPage()),
+      );
+      return;
+    }
+    if (item['title'] == 'ASP Sanjeevani') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AspCampaignPage()),
       );
       return;
     }

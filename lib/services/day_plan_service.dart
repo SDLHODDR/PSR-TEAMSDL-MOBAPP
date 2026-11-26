@@ -17,17 +17,22 @@ class DayPlanService {
   ) =>
       _apiClient.dayPlanRouteCustomers(dayPlanId, routeId);
 
+  Future<Map<String, dynamic>> loadUnlistedCustomers(int dayPlanId) =>
+      _apiClient.dayPlanUnlistedCustomers(dayPlanId);
+
   Future<Map<String, dynamic>> loadCustomerActivity({
     required int dayPlanId,
     required String activity,
     int? customerId,
     int? unlistedCustomerId,
+    String? orderType,
   }) =>
       _apiClient.dayPlanCustomerActivity(
         dayPlanId: dayPlanId,
         activity: activity,
         customerId: customerId,
         unlistedCustomerId: unlistedCustomerId,
+        orderType: orderType,
       );
 
   Future<void> deleteListedCustomer({
@@ -43,6 +48,9 @@ class DayPlanService {
     required List<Map<String, dynamic>> products,
     int? customerId,
     int? unlistedCustomerId,
+    int? routeId,
+    List<int> workWithIds = const [],
+    String? orderType,
     String remarks = '',
     String orderTo = '',
   }) async {
@@ -50,9 +58,12 @@ class DayPlanService {
       'day_plan_id': dayPlanId,
       'activity': activity,
       'products': products,
+      if (activity == 'detailing') 'work_with_ids': workWithIds,
       if (customerId != null) 'customer_id': customerId,
+      if (routeId != null) 'route_id': routeId,
       if (unlistedCustomerId != null)
         'unlisted_customer_id': unlistedCustomerId,
+      if (orderType != null && orderType.isNotEmpty) 'order_type': orderType,
       if (activity == 'pob') 'remarks': remarks,
       if (activity == 'pob' && customerId != null) 'order_to': orderTo,
     });

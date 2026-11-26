@@ -22,6 +22,7 @@ class _PobSobPageState extends State<PobSobPage> {
   late Future<PobSobMonth> monthData;
   DateTime? selectedDate;
   int tab = 0;
+  bool _showCalendar = true;
 
   @override
   void initState() {
@@ -53,6 +54,7 @@ class _PobSobPageState extends State<PobSobPage> {
     setState(() {
       selectedMonth = nextMonth;
       selectedDate = null;
+      _showCalendar = true;
       monthData = _loadMonth(nextMonth);
     });
   }
@@ -179,14 +181,22 @@ class _PobSobPageState extends State<PobSobPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const _WeekHeader(),
-                  _MonthCalendar(
-                    month: selectedMonth,
-                    days: data.days,
-                    type: tab == 0 ? 'POB' : 'SOB',
-                    selectedDate: selectedDate ?? selectedDay.date,
-                    onSelect: (date) => setState(() => selectedDate = date),
-                  ),
+                  if (_showCalendar) ...[
+                    const _WeekHeader(),
+                    _MonthCalendar(
+                      month: selectedMonth,
+                      days: data.days,
+                      type: tab == 0 ? 'POB' : 'SOB',
+                      selectedDate: selectedDate ?? selectedDay.date,
+                      onSelect: (date) => setState(() {
+                        selectedDate = date;
+                        _showCalendar = false;
+                      }),
+                    ),
+                  ] else
+                    _CollapsedCalendarToggle(
+                      onPressed: () => setState(() => _showCalendar = true),
+                    ),
                   const SizedBox(height: 18),
                   _SelectedDayHeader(
                     date: selectedDay.date,
@@ -462,6 +472,26 @@ class _MonthCalendar extends StatelessWidget {
       },
     );
   }
+}
+
+class _CollapsedCalendarToggle extends StatelessWidget {
+  const _CollapsedCalendarToggle({
+    required this.onPressed,
+  });
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Align(
+        alignment: Alignment.centerRight,
+        child: Tooltip(
+          message: 'Show calendar',
+          child: IconButton.filledTonal(
+            onPressed: onPressed,
+            icon: const Icon(Icons.calendar_month_outlined),
+          ),
+        ),
+      );
 }
 
 class _SelectedDayHeader extends StatelessWidget {

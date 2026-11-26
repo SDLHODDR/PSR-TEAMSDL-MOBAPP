@@ -95,6 +95,17 @@ class ApiClient {
   Future<Map<String, dynamic>> confirmPobSobOrder(int orderId) =>
       _requestData('POST', '/api/v1/pob-sob/orders/$orderId/confirm');
 
+  Future<Map<String, dynamic>> aspCampaignOrders() =>
+      _requestData('GET', '/api/v1/asp-campaign');
+
+  Future<Map<String, dynamic>> aspCampaignOptions() =>
+      _requestData('GET', '/api/v1/asp-campaign/options');
+
+  Future<Map<String, dynamic>> saveAspCampaignOrder(
+    Map<String, dynamic> body,
+  ) =>
+      _requestData('POST', '/api/v1/asp-campaign/orders', body: body);
+
   Future<Map<String, dynamic>> nonFieldActivityOptions() =>
       _requestData('GET', '/api/v1/non-field-activities/options');
 
@@ -120,6 +131,12 @@ class ApiClient {
         '/api/v1/day-plans/$dayPlanId/routes/$routeId/customers',
       );
 
+  Future<Map<String, dynamic>> dayPlanUnlistedCustomers(int dayPlanId) =>
+      _requestData(
+        'GET',
+        '/api/v1/day-plans/$dayPlanId/unlisted-customers',
+      );
+
   Future<Map<String, dynamic>> deleteDayPlanCustomer(
     int dayPlanId,
     int customerId,
@@ -132,11 +149,15 @@ class ApiClient {
     required String activity,
     int? customerId,
     int? unlistedCustomerId,
+    String? orderType,
   }) {
     final parameters = <String, String>{'activity': activity};
     if (customerId != null) parameters['customer_id'] = '$customerId';
     if (unlistedCustomerId != null) {
       parameters['unlisted_customer_id'] = '$unlistedCustomerId';
+    }
+    if (orderType != null && orderType.isNotEmpty) {
+      parameters['order_type'] = orderType;
     }
     return _requestData(
       'GET',

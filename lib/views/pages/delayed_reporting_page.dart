@@ -32,10 +32,24 @@ class _DelayedReportingPageState extends State<DelayedReportingPage> {
     }
     setState(() => _saving = true);
     try {
-      await ApiClient().saveDayPlanOpenRequest({
+      final response = await ApiClient().saveDayPlanOpenRequest({
         'date': _dateValue(widget.date),
         'remarks': remarks,
       });
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Delayed Reporting Request Generated'),
+          content: Text(_requestMessage(response)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
       if (mounted) Navigator.pop(context, true);
     } on ApiException catch (error) {
       if (mounted) {
@@ -82,6 +96,52 @@ class _DelayedReportingPageState extends State<DelayedReportingPage> {
           ],
         ),
       );
+
+  String _requestMessage(Map<String, dynamic> response) {
+    final requestId = _responseValue(response, const [
+      'request_id',
+      'requestId',
+      'open_request_id',
+      'openRequestId',
+    ]);
+    final taskId = _responseValue(response, const [
+      'task_id',
+      'taskId',
+      'authorization_task_id',
+      'authorizationTaskId',
+    ]);
+    final lines = <String>['Your delayed reporting request was submitted.'];
+    if (requestId != null) lines.add('Request ID: $requestId');
+    if (taskId != null) lines.add('Task ID: $taskId');
+    if (requestId == null && taskId == null) {
+      lines.add('Request and task details are available in the backend.');
+    }
+    return lines.join('\n');
+  }
+
+  String? _responseValue(
+    Map<String, dynamic> response,
+    List<String> keys,
+  ) {
+    for (final key in keys) {
+      final value = response[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+
+    for (final key in const ['request', 'task', 'open_request', 'details']) {
+      final nested = response[key];
+      if (nested is Map) {
+        final value = _responseValue(
+          Map<String, dynamic>.from(nested),
+          keys,
+        );
+        if (value != null) return value;
+      }
+    }
+    return null;
+  }
 
   String _dateValue(DateTime value) =>
       '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';

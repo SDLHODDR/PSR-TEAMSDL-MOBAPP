@@ -1,0 +1,35 @@
+Category,Item,Value,Status,Source or note
+AI usage,Models used per session,Not exposed,Unavailable,Session index has no provider/model field
+AI usage,Input tokens,Not available,Unavailable,No prompt/token export found
+AI usage,Output tokens,Not available,Unavailable,No completion-token telemetry found
+AI usage,Total tokens,Not computable,Unavailable,Do not infer from source lines or Git diffs
+AI usage,Credits or cost,Not available,Unavailable,No provider billing export found
+AI usage,Copilot usage,Not available,Unavailable,No Copilot transcript or usage export found
+Session evidence,Indexed project sessions,41,Measured,Codex/agent-host workspace session index
+Session evidence,Non-archived sessions,40,Measured,Codex/agent-host workspace session index
+Session evidence,Session change additions proxy,14690,Measured proxy,Not equivalent to source Git total or tokens
+Session evidence,Session change deletions proxy,3091,Measured proxy,Not equivalent to source Git total or tokens
+Flutter,Production Dart files,49,Measured,rg file inventory
+Flutter,Production Dart non-blank lines,11732,Measured,rg line count
+Flutter,Test Dart files,12,Measured,rg file inventory
+Flutter,Test Dart non-blank lines,961,Measured,rg line count
+Functionality,Authentication,Implemented,Observed,Login token storage auth events employee context
+Functionality,Dashboard,Implemented,Observed,Dashboard service/model/home shell
+Functionality,Tour planning,Implemented,Observed,Monthly plans routes draft submit
+Functionality,Day-plan field work,Implemented,Observed,FieldWorkPage and DayPlanService
+Functionality,Route/customer work,Implemented,Observed,Routes customers profile consent OTP
+Functionality,POB/SOB orders,Implemented,Observed,Forms details confirmation invoice PDF
+Functionality,Price list,Implemented,Observed,Price list service/page
+Functionality,Non-field activity,Implemented,Observed,Listing options save form
+Functionality,Expenses,Implemented,Observed,Monthly listing and submission
+Functionality,Reports,Implemented,Observed,Monthly/daily reports and details
+Functionality,Notifications,Configured,Needs release verification,Firebase Core and FCM service
+Functionality,Android/web setup,Present,Needs release verification,Android and web targets
+Field work,Draft save,Implemented,Observed,Remarks and start-town validation
+Field work,Listed route customers,Implemented,Observed,Planned and other route selection
+Field work,Unlisted customer,Implemented,Observed,Creation flow
+Field work,Customer activities,Implemented,Observed,Detailing sample POB/SOB availability
+Field work,Summary and submit,Implemented,Observed,Submit-for-approval flow
+Quality,Historical compile error,Resolved in current source,Historical,_intList helper exists at field_work_page.dart bottom
+Quality,Historical 503/404 integration cases,Needs retest,Historical,Session index shows field-work API investigations
+Quality,Full Flutter analyze/tests,Recommended,Follow-up,Run on current checkout
